@@ -24,8 +24,9 @@ class LocalStorage implements PrivateStorage {
   readonly driver = "local" as const;
   private readonly root: string;
   constructor(dir: string) {
-    this.root = path.resolve(process.cwd(), dir);
-    const publicDir = path.resolve(process.cwd(), "public");
+    // Runtime-configured directory: excluded from build tracing (it is data, not code).
+    this.root = path.resolve(/*turbopackIgnore: true*/ process.cwd(), dir);
+    const publicDir = path.resolve(/*turbopackIgnore: true*/ process.cwd(), "public");
     if (this.root === publicDir || this.root.startsWith(publicDir + path.sep)) {
       throw new Error("Private storage must not be inside /public");
     }

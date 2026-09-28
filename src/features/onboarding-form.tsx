@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Building, Wrench } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 import { api } from "@/lib/api-client";
 import { t } from "@/lib/i18n";
@@ -21,7 +21,7 @@ export function OnboardingForm({ defaultType }: { defaultType?: "CUSTOMER" | "PR
   const [error, setError] = useState<string | null>(null);
   const form = useForm<Values>({ resolver: zodResolver(onboardingSchema, undefined, { raw: true }), defaultValues: { type: defaultType, city: "Rabat" } });
   const { errors, isSubmitting } = form.formState;
-  const type = form.watch("type");
+  const type = useWatch({ control: form.control, name: "type" });
   return (
     <form
       noValidate

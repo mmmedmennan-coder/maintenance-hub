@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 import { api } from "@/lib/api-client";
 import { t, te } from "@/lib/i18n";
@@ -47,7 +47,7 @@ export function RequestWizard({
   });
   const windows = useFieldArray({ control: form.control, name: "preferredWindows" });
   const { errors, isSubmitting } = form.formState;
-  const values = form.watch();
+  const values = useWatch({ control: form.control });
   const selected = equipment.find((e) => e.id === values.equipmentId);
 
   const next = async () => {

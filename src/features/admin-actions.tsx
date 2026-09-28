@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 import { api } from "@/lib/api-client";
 import { t, te } from "@/lib/i18n";
@@ -51,7 +51,7 @@ export function ProviderCheckForm({ profileId }: { profileId: string }) {
   const { run, error } = useAction();
   const form = useForm<CheckValues>({ resolver: zodResolver(providerCheckSchema, undefined, { raw: true }), defaultValues: { type: "BUSINESS_IDENTITY", status: "VERIFIED", publicNote: "", internalNote: "", expiresAt: null } });
   const { errors, isSubmitting } = form.formState;
-  const type = form.watch("type");
+  const type = useWatch({ control: form.control, name: "type" });
   return (
     <form
       noValidate

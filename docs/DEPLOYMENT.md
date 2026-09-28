@@ -32,8 +32,7 @@ Provide the variables of `.env.example` through the hosting platform's secret st
 image or repository):
 
 - `NODE_ENV=production`, `APP_NAME`, `APP_URL=https://…`, `BETTER_AUTH_URL` (same origin).
-- `BETTER_AUTH_SECRET`, `FILE_SIGNING_SECRET`: 32+ random characters each, different values;
-  rotating `BETTER_AUTH_SECRET` signs everyone out.
+- `BETTER_AUTH_SECRET`: 32+ random characters; rotating it signs everyone out.
 - `DATABASE_URL` (`mh_app`), `AUTH_DATABASE_URL` (`mh_auth`), `WORKER_DATABASE_URL` (`mh_worker`) for
   the running services; `MIGRATION_DATABASE_URL` (`mh_owner`) **only** for the migration job. Use
   `?sslmode=require` (or stricter) with managed databases.
@@ -108,7 +107,7 @@ are visible on the admin dashboard. SMS, WhatsApp and payment gateways are not i
 | --- | --- | --- |
 | PostgreSQL | Managed daily snapshots + point-in-time recovery (WAL), or `pg_dump -Fc` nightly to separate storage | RPO ≤ 24 h (≤ 5 min with PITR), keep 30 days |
 | Private files | Bucket versioning + replication or periodic copy to another account/region | same retention as the database |
-| Secrets | Platform secret manager; keep an offline copy of `BETTER_AUTH_SECRET` and `FILE_SIGNING_SECRET` | — |
+| Secrets | Platform secret manager; keep an offline copy of `BETTER_AUTH_SECRET` | — |
 
 Restore procedure (test it before the pilot, then quarterly):
 

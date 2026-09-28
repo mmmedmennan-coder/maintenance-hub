@@ -11,7 +11,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <main id="main" className="flex flex-1 items-start justify-center px-4 pb-16 pt-6 sm:pt-12">
         <div className="w-full max-w-md rounded-[var(--radius-card)] border border-line bg-surface p-6 shadow-[var(--shadow-card)] sm:p-8">{children}</div>
       </main>
-      <p className="pb-6 text-center text-xs text-muted">{t("public.footer.disclaimer")}</p>
+      <footer className="pb-6 text-center text-xs text-muted">
+        <p>{t("public.footer.disclaimer")}</p>
+      </footer>
     </div>
   );
 }

@@ -25,9 +25,10 @@ test("repair approval by exact version, technician work and report on a phone, a
   await expect(viewer.getByRole("button", { name: "Approuver" })).toHaveCount(0);
   await expect(viewer.getByText(/ne permet pas d'approuver/).first()).toBeVisible();
 
-  // The manager approves the exact version displayed (hash + idempotency key sent).
-  const manager = await as(browser, demo("responsable"));
+  // The manager approves the exact version displayed (hash + idempotency key sent), on a phone.
+  const manager = await as(browser, demo("responsable"), { width: 390, height: 844 });
   await manager.goto(`/client/rendez-vous/${bookingId}`);
+  await expectNoHorizontalOverflow(manager);
   await manager.getByRole("button", { name: "Approuver" }).click();
   await expect(manager.getByRole("dialog")).toContainText(/2[\s.\u202f]976,00/);
   await confirmDialog(manager, /^Approuver pour/);

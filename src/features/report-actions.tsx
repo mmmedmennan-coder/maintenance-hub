@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleCheck, FileCheck, TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 import { api } from "@/lib/api-client";
 import { t } from "@/lib/i18n";
@@ -28,7 +28,7 @@ export function ReportForm({ workOrderId, photos, pendingQuote }: { workOrderId:
     resolver: zodResolver(reportSchema, undefined, { raw: true }),
     defaultValues: { findings: "", workPerformed: "", partsUsed: "", recommendations: "", nextServiceDate: null, photoDocumentIds: photos.map((p) => p.id) },
   });
-  const selected = form.watch("photoDocumentIds") ?? [];
+  const selected = useWatch({ control: form.control, name: "photoDocumentIds" }) ?? [];
   const { errors, isSubmitting } = form.formState;
   if (pendingQuote) return <p className="text-sm text-muted">{t("report.form.pendingQuote")}</p>;
   return (

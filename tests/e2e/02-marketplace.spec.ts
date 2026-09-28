@@ -1,5 +1,5 @@
 import { type Browser, type Page, expect, test } from "@playwright/test";
-import { BASE_URL, confirmDialog, demo, linkFromMail, signIn, workday } from "./helpers";
+import { BASE_URL, confirmDialog, demo, expectNoHorizontalOverflow, linkFromMail, signIn, workday } from "./helpers";
 
 test.setTimeout(240_000);
 
@@ -86,9 +86,11 @@ test("new customer: sign-up, e-mail verification, onboarding, assets, request, o
   await provider.getByRole("button", { name: "Émettre l'offre" }).click();
   await expect(provider.getByText("Offre émise : elle est désormais visible par le client.")).toBeVisible();
 
-  // 6. Customer compares and selects → booking pending confirmation.
+  // 6. Customer compares and selects on a phone (card presentation) → booking pending confirmation.
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(requestUrl);
-  await expect(page.getByText("Froid Atlas Services (démo)").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page.locator("#offres").getByRole("link", { name: "Froid Atlas Services (démo)" })).toBeVisible();
   await expect(page.locator("#offres")).toContainText("420,00 MAD");
   await page.getByRole("button", { name: "Choisir" }).first().click();
   await confirmDialog(page, "Retenir cette offre");

@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { safeNext } from "@/server/auth/session";
 import { DomainError, mapDatabaseError, sqlState } from "@/server/errors";
-import { canonicalJson, hmacSign, hmacVerify, snapshotHash } from "@/server/lib/hash";
+import { canonicalJson, snapshotHash } from "@/server/lib/hash";
 import { hitRateLimit } from "@/server/lib/rate-limit";
 import { assertSafeKey } from "@/server/storage";
 
@@ -18,12 +18,6 @@ describe("snapshot hashes", () => {
   });
   it("change when any priced content changes", () => {
     expect(snapshotHash({ total: 100 })).not.toBe(snapshotHash({ total: 101 }));
-  });
-  it("sign and verify download tokens in constant time", () => {
-    const sig = hmacSign("s".repeat(32), "doc:1:exp");
-    expect(hmacVerify("s".repeat(32), "doc:1:exp", sig)).toBe(true);
-    expect(hmacVerify("s".repeat(32), "doc:2:exp", sig)).toBe(false);
-    expect(hmacVerify("t".repeat(32), "doc:1:exp", sig)).toBe(false);
   });
 });
 

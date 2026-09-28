@@ -114,7 +114,7 @@ function QuoteVersionView({ v, docs, actions }: { v: Version; docs: Doc[]; actio
             amount: formatMoney(v.approval.amountMinor, v.approval.currency),
           })}
           {v.approval.reason ? ` — ${v.approval.reason}` : ""}
-          <span className="mt-1 block font-mono text-[11px] opacity-80">{t("quote.hash", { hash: v.approval.snapshotHash.slice(0, 16) })}</span>
+          <span className="mt-1 block font-mono text-xs">{t("quote.hash", { hash: v.approval.snapshotHash.slice(0, 16) })}</span>
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2">

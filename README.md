@@ -66,7 +66,7 @@ docker compose up -d
 
 Remplacez **toutes** les valeurs `change-me…` / `replace-with…` :
 
-- `BETTER_AUTH_SECRET` et `FILE_SIGNING_SECRET` : au moins 32 caractères aléatoires. Pour en générer
+- `BETTER_AUTH_SECRET` : au moins 32 caractères aléatoires. Pour en générer
   (PowerShell comme bash) :
   `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
 - Les mots de passe des rôles PostgreSQL `mh_owner`, `mh_app`, `mh_auth`, `mh_worker` (12 caractères

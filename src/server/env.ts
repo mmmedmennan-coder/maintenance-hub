@@ -15,7 +15,6 @@ const schema = z
     WORKER_DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//).optional(),
     STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
     STORAGE_LOCAL_DIR: z.string().default("./storage/private"),
-    FILE_SIGNING_SECRET: z.string().min(32, "FILE_SIGNING_SECRET must be at least 32 characters"),
     S3_BUCKET: z.string().optional(),
     S3_REGION: z.string().optional(),
     S3_ENDPOINT: z.string().optional(),
@@ -55,14 +54,18 @@ export type Env = z.infer<typeof schema>;
 
 let cached: Env | undefined;
 
-/** Validated configuration. Parsed lazily so `next build` does not need runtime secrets. */
-export function getEnv(): Env {
-  if (cached) return cached;
-  const parsed = schema.safeParse(process.env);
+/** Validates a set of variables; throws a readable error listing every problem. */
+export function parseEnv(source: Record<string, string | undefined>): Env {
+  const parsed = schema.safeParse(source);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Invalid configuration — ${issues}`);
   }
-  cached = parsed.data;
+  return parsed.data;
+}
+
+/** Validated configuration. Parsed lazily so `next build` does not need runtime secrets. */
+export function getEnv(): Env {
+  cached ??= parseEnv(process.env);
   return cached;
 }
