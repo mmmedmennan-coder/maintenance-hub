@@ -77,6 +77,7 @@ export type ReportPdfData = {
   nextServiceDate: Date | null;
   repairDeclined: boolean;
   approvedScopes: { title: string; versionNo: number; totalMinor: number; currency: string; decidedAt: Date; snapshotHash: string }[];
+  /** JPEG data only (see generateReportPdf); other formats are listed by name. */
   photos: { name: string; data: Buffer | null }[];
   snapshotHash: string;
 };

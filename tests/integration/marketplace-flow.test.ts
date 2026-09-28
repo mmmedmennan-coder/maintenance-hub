@@ -1,13 +1,11 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { workerDb } from "@/server/db/clients";
 import { withActor, withPublic } from "@/server/db/context";
 import { idempotent } from "@/server/lib/infra";
 import { confirmBooking } from "@/server/modules/bookings";
 import { issueOffer, saveOfferDraft, selectOfferVersion } from "@/server/modules/offers";
 import { searchProviders } from "@/server/modules/providers";
 import { createRequestDraft, inviteProviders, submitRequest } from "@/server/modules/requests";
-import { processOutboxBatch } from "@/server/worker/queue";
-import { expectCode, inDays, makeCustomer, makeProvider } from "./helpers";
+import { drainOutbox, expectCode, inDays, makeCustomer, makeProvider } from "./helpers";
 
 export function offerInput(date: string, overrides: Record<string, unknown> = {}) {
   return {
@@ -153,7 +151,7 @@ describe("request → offers → selection → confirmation (real PostgreSQL + R
     );
 
     // Worker closes competing offers without revealing prices.
-    for (let i = 0; i < 5; i++) await processOutboxBatch(workerDb(), "test-worker");
+    await drainOutbox();
     const p2After = await withActor(p2.manager, async (tx) => ({
       invitation: (await tx.requestInvitation.findUniqueOrThrow({ where: { id: inv2.id } })).status,
       version: (await tx.offerVersion.findUniqueOrThrow({ where: { id: d2.versionId } })).status,
@@ -180,7 +178,7 @@ describe("request → offers → selection → confirmation (real PostgreSQL + R
     const notes = await withActor(customer.owner, (tx) => tx.notification.findMany({ where: { userId: customer.owner.userId } }));
     expect(notes.some((n) => n.type === "bookingConfirmed")).toBe(true);
     // Re-running the worker does not duplicate notifications.
-    for (let i = 0; i < 3; i++) await processOutboxBatch(workerDb(), "test-worker-2");
+    await drainOutbox();
     const notesAgain = await withActor(customer.owner, (tx) => tx.notification.count({ where: { userId: customer.owner.userId } }));
     expect(notesAgain).toBe(notes.length);
   });

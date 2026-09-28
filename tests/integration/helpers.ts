@@ -108,3 +108,29 @@ export async function expectCode(promise: Promise<unknown>, code: string) {
   }
   throw new Error(`Expected ${code} but the operation succeeded`);
 }
+
+/**
+ * Test-only time travel: appointments must be confirmed in the future, so field-work tests
+ * move a confirmed booking to start in 30 minutes (owner connection, constraints still apply).
+ */
+export async function shiftBookingToSoon(bookingId: string, minutesFromNow = 30) {
+  const db = ownerDb();
+  const start = new Date(Date.now() + minutesFromNow * 60_000);
+  const end = new Date(start.getTime() + 60 * 60_000);
+  await db.booking.update({ where: { id: bookingId }, data: { scheduledStart: start, scheduledEnd: end } });
+  await db.appointmentReservation.updateMany({
+    where: { bookingId, status: "ACTIVE" },
+    data: { startsAt: start, endsAt: end, blockedStart: new Date(start.getTime() - 30 * 60_000), blockedEnd: new Date(end.getTime() + 30 * 60_000) },
+  });
+}
+
+/** Processes the shared outbox until it is empty (tests share one database). */
+export async function drainOutbox(workerId = "test-worker") {
+  const { workerDb } = await import("@/server/db/clients");
+  const { processOutboxBatch } = await import("@/server/worker/queue");
+  for (let i = 0; i < 200; i++) {
+    const r = await processOutboxBatch(workerDb(), workerId, 50);
+    if (r.claimed === 0) return;
+  }
+  throw new Error("outbox did not drain");
+}

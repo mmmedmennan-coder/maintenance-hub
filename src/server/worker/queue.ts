@@ -5,6 +5,24 @@ import { getEnv } from "@/server/env";
 import { dispatch, type OutboxRow } from "./handlers";
 
 const LEASE_MINUTES = 5;
+const HANDLER_TIMEOUT_MS = 60_000;
+
+/** A handler that hangs must not block the worker: it fails and is retried later. */
+export function withTimeout<T>(promise: Promise<T>, ms = HANDLER_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`handler timeout after ${ms} ms`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
 
 /** Exponential backoff: 10 s, 20 s, 40 s … capped at one hour. */
 export function backoffSeconds(attempts: number) {
@@ -37,7 +55,7 @@ export async function processOutboxBatch(db: PrismaClient, workerId: string, lim
   let failed = 0;
   for (const row of rows) {
     try {
-      await dispatch(db, row);
+      await withTimeout(dispatch(db, row));
       await db.outboxEvent.updateMany({
         where: { id: row.id, lockedBy: workerId },
         data: { status: "DONE", processedAt: new Date(), lockedAt: null, lastError: null },
@@ -99,7 +117,7 @@ export async function processEmailBatch(db: PrismaClient, workerId: string, limi
   let sent = 0;
   for (const row of rows) {
     try {
-      await send({ to: row.to_email, subject: row.subject, text: row.text_body });
+      await withTimeout(send({ to: row.to_email, subject: row.subject, text: row.text_body }), 30_000);
       await db.emailDelivery.updateMany({
         where: { id: row.id, lockedBy: workerId },
         data: { status: "DONE", sentAt: new Date(), lockedAt: null, lastError: null, textBody: "[contenu effacé après envoi]" },

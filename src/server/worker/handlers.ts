@@ -63,7 +63,8 @@ export async function generateReportPdf(db: PrismaClient, reportId: string) {
   const photoData = await Promise.all(
     photos.map(async (p) => ({
       name: p.originalName,
-      data: p.mimeType === "image/jpeg" || p.mimeType === "image/png" ? await storage.get(p.storageKey).catch(() => null) : null,
+      // Only JPEG is embedded: pdfkit decodes PNG asynchronously and a malformed file could not be caught.
+      data: p.mimeType === "image/jpeg" ? await storage.get(p.storageKey).catch(() => null) : null,
     })),
   );
   const env = getEnv();
