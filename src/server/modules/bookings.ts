@@ -354,6 +354,8 @@ export async function listBookings(
       include: {
         offerVersion: { select: { totalMinor: true, currency: true, versionNo: true } },
         workOrder: { select: { id: true, reference: true, status: true, acknowledgment: true } },
+        site: { select: { name: true, city: true } },
+        equipment: { select: { label: true } },
       },
     }),
     tx.booking.count({ where }),
@@ -401,7 +403,7 @@ export async function getBookingDetail(tx: Tx, actor: Actor, bookingId: string) 
   const [request, site, equipment, orgs, documents, plan] = await Promise.all([
     tx.serviceRequest.findUnique({
       where: { id: booking.requestId },
-      select: { id: true, reference: true, title: true, symptoms: true, kind: true, preferredWindows: true, equipmentCategory: { select: { labelFr: true } } },
+      select: { id: true, reference: true, title: true, symptoms: true, kind: true, preferredWindows: true, equipmentCategoryId: true, equipmentCategory: { select: { labelFr: true } } },
     }),
     tx.site.findUnique({ where: { id: booking.siteId }, select: { id: true, name: true, addressLine: true, city: true, accessNotes: true, contactName: true, contactPhone: true } }),
     tx.equipment.findUnique({ where: { id: booking.equipmentId }, select: { id: true, label: true, brand: true, model: true, serialNumber: true, installedYear: true } }),

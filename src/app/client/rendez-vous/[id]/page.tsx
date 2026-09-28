@@ -1,0 +1,35 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { t } from "@/lib/i18n";
+import { guard } from "@/server/auth/page-guard";
+import { withActor } from "@/server/db/context";
+import { DomainError } from "@/server/errors";
+import { getBookingDetail } from "@/server/modules/bookings";
+import { listPayments } from "@/server/modules/payments";
+import { BookingView } from "@/components/domain/booking-view";
+
+export const metadata: Metadata = { title: t("booking.titleSingle") };
+
+export default async function CustomerBookingPage({ params }: { params: Promise<{ id: string }> }) {
+  const actor = await guard({ orgTypes: ["CUSTOMER"] });
+  const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
+  const data = await withActor(actor, async (tx) => {
+    const detail = await getBookingDetail(tx, actor, id);
+    const payments = await listPayments(tx, actor, id);
+    return { detail, payments };
+  }).catch((e) => {
+    if (e instanceof DomainError && e.code === "NOT_FOUND") notFound();
+    throw e;
+  });
+  return (
+    <BookingView
+      detail={data.detail}
+      payments={data.payments}
+      technicians={null}
+      perspective="customer"
+      actor={actor}
+      back={{ href: "/client/rendez-vous", label: t("booking.listTitle") }}
+    />
+  );
+}

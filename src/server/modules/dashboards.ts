@@ -152,5 +152,8 @@ export async function listVisibleDocuments(tx: Tx, actor: Actor, opts: { kind?: 
     }),
     tx.document.count({ where }),
   ]);
-  return { items, total, page, pageSize };
+  const woIds = [...new Set(items.map((d) => d.workOrderId).filter((x): x is string => !!x))];
+  const workOrders = woIds.length ? await tx.workOrder.findMany({ where: { id: { in: woIds } }, select: { id: true, bookingId: true, reference: true } }) : [];
+  const byId = new Map(workOrders.map((w) => [w.id, w]));
+  return { items: items.map((d) => ({ ...d, workOrder: d.workOrderId ? (byId.get(d.workOrderId) ?? null) : null })), total, page, pageSize };
 }

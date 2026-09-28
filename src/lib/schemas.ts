@@ -132,7 +132,8 @@ export const equipmentUpdateSchema = equipmentSchema.omit({ siteId: true }).exte
 const hoursRange = z.tuple([z.number().int().min(0).max(1440), z.number().int().min(0).max(1440)]).refine(([a, b]) => a < b, {
   message: "L'heure de fin doit suivre l'heure de début.",
 });
-export const serviceHoursSchema = z.record(z.enum(["1", "2", "3", "4", "5", "6", "7"]), hoursRange);
+// Closed days are simply absent (partial record: zod v4 records with enum keys are otherwise exhaustive).
+export const serviceHoursSchema = z.partialRecord(z.enum(["1", "2", "3", "4", "5", "6", "7"]), hoursRange);
 
 export const providerProfileSchema = z.object({
   displayName: trimmed(120, 2),
