@@ -7,7 +7,7 @@ import { type Actor, can } from "@/server/auth/roles";
 import type { Tx } from "@/server/db/context";
 import { DomainError, forbidden, invalidTransition, notFound, validation } from "@/server/errors";
 import { audit, emitEvent } from "@/server/lib/infra";
-import { lockForUpdate } from "@/server/lib/locks";
+import { lockForUpdate, lockVisible } from "@/server/lib/locks";
 
 export const MAX_INVITATIONS = 3;
 const PAGE_SIZE = 15;
@@ -255,7 +255,9 @@ async function buildBrief(tx: Tx, requestId: string): Promise<RequestBrief> {
 export async function inviteProviders(tx: Tx, actor: Actor, requestId: string, input: z.output<typeof inviteProvidersSchema>) {
   const admin = can.admin(actor);
   if (!admin) assertWriter(actor);
-  if (!(await lockForUpdate(tx, "service_request", requestId))) throw notFound("Demande");
+  // Administrators can read but not update a customer's request: they take the advisory lock only.
+  const locked = admin ? await lockVisible(tx, "service_request", requestId) : await lockForUpdate(tx, "service_request", requestId);
+  if (!locked) throw notFound("Demande");
   const request = await tx.serviceRequest.findUniqueOrThrow({ where: { id: requestId } });
   if (!admin && request.customerOrgId !== actor.orgId) throw notFound("Demande");
   if (request.status !== "OPEN") throw invalidTransition("Les invitations sont possibles uniquement pour une demande ouverte.");

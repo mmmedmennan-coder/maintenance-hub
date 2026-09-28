@@ -21,8 +21,8 @@ export function AccountForms({ name, email }: { name: string; email: string }) {
   const router = useRouter();
   const [nameMsg, setNameMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const nameForm = useForm<z.input<typeof nameSchema>>({ resolver: zodResolver(nameSchema), defaultValues: { name } });
-  const pwForm = useForm<z.input<typeof passwordSchema>>({ resolver: zodResolver(passwordSchema) });
+  const nameForm = useForm<z.input<typeof nameSchema>>({ resolver: zodResolver(nameSchema, undefined, { raw: true }), defaultValues: { name } });
+  const pwForm = useForm<z.input<typeof passwordSchema>>({ resolver: zodResolver(passwordSchema, undefined, { raw: true }) });
   return (
     <div className="space-y-6">
       <Card>

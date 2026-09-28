@@ -19,7 +19,7 @@ type Values = z.input<typeof onboardingSchema>;
 export function OnboardingForm({ defaultType }: { defaultType?: "CUSTOMER" | "PROVIDER" }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const form = useForm<Values>({ resolver: zodResolver(onboardingSchema), defaultValues: { type: defaultType, city: "Rabat" } });
+  const form = useForm<Values>({ resolver: zodResolver(onboardingSchema, undefined, { raw: true }), defaultValues: { type: defaultType, city: "Rabat" } });
   const { errors, isSubmitting } = form.formState;
   const type = form.watch("type");
   return (

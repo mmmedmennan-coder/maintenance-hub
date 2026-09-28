@@ -17,7 +17,7 @@ type Values = z.input<typeof supportMessageSchema>;
 export function SupportForm() {
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const form = useForm<Values>({ resolver: zodResolver(supportMessageSchema), defaultValues: { topic: "CUSTOMER" } });
+  const form = useForm<Values>({ resolver: zodResolver(supportMessageSchema, undefined, { raw: true }), defaultValues: { topic: "CUSTOMER" } });
   const { errors, isSubmitting } = form.formState;
   if (sent) {
     return (

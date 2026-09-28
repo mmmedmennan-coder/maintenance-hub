@@ -49,7 +49,7 @@ const CHECK_STATUSES = ["PENDING", "VERIFIED", "REJECTED", "EXPIRED"] as const;
 export function ProviderCheckForm({ profileId }: { profileId: string }) {
   const [saved, setSaved] = useState(false);
   const { run, error } = useAction();
-  const form = useForm<CheckValues>({ resolver: zodResolver(providerCheckSchema), defaultValues: { type: "BUSINESS_IDENTITY", status: "VERIFIED", publicNote: "", internalNote: "", expiresAt: null } });
+  const form = useForm<CheckValues>({ resolver: zodResolver(providerCheckSchema, undefined, { raw: true }), defaultValues: { type: "BUSINESS_IDENTITY", status: "VERIFIED", publicNote: "", internalNote: "", expiresAt: null } });
   const { errors, isSubmitting } = form.formState;
   const type = form.watch("type");
   return (
@@ -184,7 +184,7 @@ type PeriodValues = z.input<typeof subscriptionPeriodSchema>;
 export function SubscriptionPeriodForm({ providerOrgId, defaults }: { providerOrgId: string; defaults: { periodStart: string; periodEnd: string; amount: number } }) {
   const { run, error } = useAction();
   const form = useForm<PeriodValues>({
-    resolver: zodResolver(subscriptionPeriodSchema),
+    resolver: zodResolver(subscriptionPeriodSchema, undefined, { raw: true }),
     defaultValues: { periodStart: defaults.periodStart, periodEnd: defaults.periodEnd, amount: minorToInput(defaults.amount), reference: "", reason: "" },
   });
   const { errors, isSubmitting } = form.formState;
@@ -241,7 +241,7 @@ export function PlanEditForm({ plan }: { plan: { id: string; name: string; price
   const [saved, setSaved] = useState(false);
   const { run, error } = useAction();
   const form = useForm<PlanValues>({
-    resolver: zodResolver(subscriptionPlanSchema),
+    resolver: zodResolver(subscriptionPlanSchema, undefined, { raw: true }),
     defaultValues: { name: plan.name, price: minorToInput(plan.priceMinor), maxStaff: plan.maxStaff, taxNote: plan.taxNote, active: plan.active, reason: "" },
   });
   const { errors, isSubmitting } = form.formState;
@@ -293,7 +293,7 @@ type CategoryValues = z.input<typeof categorySchema>;
 export function CategoryForm({ category }: { category?: { id: string; labelFr: string; code: string; active: boolean; sortOrder: number } }) {
   const [saved, setSaved] = useState(false);
   const { run, error } = useAction();
-  const form = useForm<CategoryValues>({ resolver: zodResolver(categorySchema), defaultValues: category ?? { labelFr: "", code: "", active: true, sortOrder: 100 } });
+  const form = useForm<CategoryValues>({ resolver: zodResolver(categorySchema, undefined, { raw: true }), defaultValues: category ?? { labelFr: "", code: "", active: true, sortOrder: 100 } });
   const { errors, isSubmitting } = form.formState;
   return (
     <form

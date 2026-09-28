@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import { t } from "@/lib/i18n";
+import { emailInput } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Field, FormError, Input } from "@/components/ui/field";
@@ -34,7 +35,7 @@ function authMessage(error: AuthError): string {
   }
 }
 
-const email = z.email(t("auth.errors.email")).trim().toLowerCase();
+const email = emailInput(t("auth.errors.email"));
 const password = z.string().min(10, t("auth.errors.passwordShort")).max(128);
 
 export function SignInForm({ next }: { next: string }) {

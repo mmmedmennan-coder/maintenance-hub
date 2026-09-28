@@ -39,7 +39,7 @@ export function RecordPaymentButton({
   const { run, error } = useAction();
   const idem = useIdempotencyKey();
   const form = useForm<Values>({
-    resolver: zodResolver(paymentSchema),
+    resolver: zodResolver(paymentSchema, undefined, { raw: true }),
     defaultValues: {
       amount: outstandingMinor > 0 ? minorToInput(outstandingMinor) : "",
       method: "BANK_TRANSFER",

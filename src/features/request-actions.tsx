@@ -144,7 +144,7 @@ export function DraftEditForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const form = useForm<z.input<typeof draftEditSchema>>({ resolver: zodResolver(draftEditSchema), defaultValues: initial });
+  const form = useForm<z.input<typeof draftEditSchema>>({ resolver: zodResolver(draftEditSchema, undefined, { raw: true }), defaultValues: initial });
   const windows = useFieldArray({ control: form.control, name: "preferredWindows" });
   const { errors, isSubmitting } = form.formState;
   return (

@@ -54,7 +54,7 @@ export function QuoteEditor({
   const { run, error } = useAction();
   const issueKey = useIdempotencyKey();
   const form = useForm<Values>({
-    resolver: zodResolver(repairQuoteSchema),
+    resolver: zodResolver(repairQuoteSchema, undefined, { raw: true }),
     defaultValues: {
       title: initial?.title,
       scopeSummary: initial?.scopeSummary ?? "",

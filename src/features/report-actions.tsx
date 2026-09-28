@@ -25,7 +25,7 @@ export function ReportForm({ workOrderId, photos, pendingQuote }: { workOrderId:
   const idem = useIdempotencyKey();
   const [available, setAvailable] = useState<Photo[]>(photos);
   const form = useForm<Values>({
-    resolver: zodResolver(reportSchema),
+    resolver: zodResolver(reportSchema, undefined, { raw: true }),
     defaultValues: { findings: "", workPerformed: "", partsUsed: "", recommendations: "", nextServiceDate: null, photoDocumentIds: photos.map((p) => p.id) },
   });
   const selected = form.watch("photoDocumentIds") ?? [];

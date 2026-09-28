@@ -6,6 +6,8 @@ import { z } from "zod";
 import { parseMoneyInput, parseQuantityInput, parseRateInput } from "./money";
 
 const req = "Champ obligatoire.";
+/** Trims and lower-cases before validating (a pasted address with spaces is accepted). */
+export const emailInput = (message = "Adresse e-mail invalide.") => z.string().trim().toLowerCase().max(200).pipe(z.email(message));
 export const id = z.uuid({ message: "Identifiant invalide." });
 const trimmed = (max: number, min = 1) =>
   z
@@ -85,7 +87,7 @@ export const onboardingSchema = z.object({
 });
 
 export const staffInviteSchema = z.object({
-  email: z.email("Adresse e-mail invalide.").trim().toLowerCase().max(200),
+  email: emailInput(),
   role: z.enum(["customer_owner", "customer_manager", "customer_viewer", "provider_owner", "provider_dispatcher", "technician"], {
     message: "Rôle invalide.",
   }),
@@ -96,7 +98,7 @@ export const memberRoleSchema = z.object({ role: staffInviteSchema.shape.role })
 export const activeOrganizationSchema = z.object({ organizationId: z.string().min(1).max(64) });
 
 export const referralSchema = z.object({
-  email: z.email("Adresse e-mail invalide.").trim().toLowerCase().max(200),
+  email: emailInput(),
   companyName: trimmed(120, 2),
   message: optionalText(500),
 });
@@ -419,7 +421,7 @@ export const adminInviteProviderSchema = z.object({
 
 export const supportMessageSchema = z.object({
   name: trimmed(120, 2),
-  email: z.email("Adresse e-mail invalide.").trim().max(200),
+  email: emailInput(),
   organizationName: optionalText(120),
   topic: z.enum(["CUSTOMER", "PROVIDER", "ACCOUNT", "OTHER"]),
   message: trimmed(3000, 10),

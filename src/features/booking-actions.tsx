@@ -36,7 +36,7 @@ export function ConfirmBookingForm({
   const idem = useIdempotencyKey();
   const active = technicians.filter((tech) => tech.active);
   const form = useForm<ConfirmValues>({
-    resolver: zodResolver(confirmBookingSchema),
+    resolver: zodResolver(confirmBookingSchema, undefined, { raw: true }),
     defaultValues: {
       technicianId: active.find((tech) => tech.skilled)?.id ?? active[0]?.id ?? "",
       date: defaults.date,
@@ -166,7 +166,7 @@ export function ProposeRescheduleButton({
   const [open, setOpen] = useState(false);
   const { run, error } = useAction();
   const form = useForm<RescheduleValues>({
-    resolver: zodResolver(rescheduleProposalSchema),
+    resolver: zodResolver(rescheduleProposalSchema, undefined, { raw: true }),
     defaultValues: { date: defaults.date, start: defaults.start, durationMin: defaults.durationMin, technicianId: defaults.technicianId ?? null, reason: "" },
   });
   const { errors, isSubmitting } = form.formState;

@@ -19,7 +19,7 @@ export function SiteForm({ site, cities }: { site?: SiteValues & { id: string; v
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const form = useForm<SiteValues>({ resolver: zodResolver(siteSchema), defaultValues: site ?? { city: "Rabat" } });
+  const form = useForm<SiteValues>({ resolver: zodResolver(siteSchema, undefined, { raw: true }), defaultValues: site ?? { city: "Rabat" } });
   const { errors, isSubmitting } = form.formState;
   return (
     <form
@@ -93,7 +93,7 @@ export function EquipmentForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const form = useForm<EquipmentValues>({
-    resolver: zodResolver(equipmentSchema),
+    resolver: zodResolver(equipmentSchema, undefined, { raw: true }),
     defaultValues: equipment ?? { siteId: defaultSiteId ?? sites[0]?.id, categoryId: categories[0]?.id },
   });
   const { errors, isSubmitting } = form.formState;

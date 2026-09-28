@@ -26,7 +26,7 @@ export function OfferEditor({ invitationId, offerId, initial, kind }: { invitati
   const [currentOfferId, setCurrentOfferId] = useState(offerId);
   const { run, error } = useAction();
   const issueKey = useIdempotencyKey();
-  const form = useForm<OfferValues>({ resolver: zodResolver(offerDraftSchema), defaultValues: initial });
+  const form = useForm<OfferValues>({ resolver: zodResolver(offerDraftSchema, undefined, { raw: true }), defaultValues: initial });
   const [callout, service, rate] = useWatch({ control: form.control, name: ["calloutFee", "serviceFee", "taxRate"] });
   const c = parseMoneyInput(callout as string);
   const s = parseMoneyInput(service as string);

@@ -28,7 +28,7 @@ export function TechnicianForm({
   const [saved, setSaved] = useState(false);
   const { run, error } = useAction();
   const form = useForm<TechValues>({
-    resolver: zodResolver(technicianSchema),
+    resolver: zodResolver(technicianSchema, undefined, { raw: true }),
     defaultValues: technician
       ? { displayName: technician.displayName, phone: technician.phone ?? "", userId: technician.userId ?? "", skillIds: technician.skillIds, active: technician.active }
       : { displayName: "", phone: "", userId: "", skillIds: [], active: true },
@@ -95,7 +95,7 @@ type WindowValues = z.input<typeof availabilityWindowSchema>;
 
 export function AvailabilityForm({ technicianId }: { technicianId: string }) {
   const { run, error } = useAction();
-  const form = useForm<WindowValues>({ resolver: zodResolver(availabilityWindowSchema), defaultValues: { technicianId, weekday: 1, start: "08:00", end: "17:00" } });
+  const form = useForm<WindowValues>({ resolver: zodResolver(availabilityWindowSchema, undefined, { raw: true }), defaultValues: { technicianId, weekday: 1, start: "08:00", end: "17:00" } });
   const { errors, isSubmitting } = form.formState;
   return (
     <form noValidate className="flex flex-wrap items-end gap-3" onSubmit={form.handleSubmit((values) => run(() => api("/api/v1/provider/availability", { body: values })))}>
@@ -126,7 +126,7 @@ type TimeOffValues = z.input<typeof timeOffSchema>;
 
 export function TimeOffForm({ technicianId, today }: { technicianId: string; today: string }) {
   const { run, error } = useAction();
-  const form = useForm<TimeOffValues>({ resolver: zodResolver(timeOffSchema), defaultValues: { technicianId, startDate: today, startTime: "08:00", endDate: today, endTime: "18:00", reason: "" } });
+  const form = useForm<TimeOffValues>({ resolver: zodResolver(timeOffSchema, undefined, { raw: true }), defaultValues: { technicianId, startDate: today, startTime: "08:00", endDate: today, endTime: "18:00", reason: "" } });
   const { errors, isSubmitting } = form.formState;
   return (
     <form noValidate className="space-y-3" onSubmit={form.handleSubmit((values) => run(() => api("/api/v1/provider/time-off", { body: values })))}>

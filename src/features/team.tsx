@@ -18,7 +18,7 @@ type InviteValues = z.input<typeof staffInviteSchema>;
 export function InviteStaffForm({ roles, disabledReason }: { roles: string[]; disabledReason?: string | null }) {
   const [sent, setSent] = useState<string | null>(null);
   const { run, error } = useAction();
-  const form = useForm<InviteValues>({ resolver: zodResolver(staffInviteSchema), defaultValues: { email: "", role: roles[roles.length - 1] as InviteValues["role"] } });
+  const form = useForm<InviteValues>({ resolver: zodResolver(staffInviteSchema, undefined, { raw: true }), defaultValues: { email: "", role: roles[roles.length - 1] as InviteValues["role"] } });
   const { errors, isSubmitting } = form.formState;
   if (disabledReason) return <Alert tone="warn">{disabledReason}</Alert>;
   return (
@@ -124,7 +124,7 @@ type ReferralValues = z.input<typeof referralSchema>;
 export function ReferralForm() {
   const [sent, setSent] = useState(false);
   const { run, error } = useAction();
-  const form = useForm<ReferralValues>({ resolver: zodResolver(referralSchema), defaultValues: { email: "", companyName: "", message: "" } });
+  const form = useForm<ReferralValues>({ resolver: zodResolver(referralSchema, undefined, { raw: true }), defaultValues: { email: "", companyName: "", message: "" } });
   const { errors, isSubmitting } = form.formState;
   return (
     <form

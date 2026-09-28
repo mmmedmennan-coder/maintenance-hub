@@ -37,7 +37,7 @@ export function RequestWizard({
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const form = useForm<Values>({
-    resolver: zodResolver(requestDraftSchema),
+    resolver: zodResolver(requestDraftSchema, undefined, { raw: true }),
     mode: "onTouched",
     defaultValues: {
       equipmentId: defaultEquipmentId ?? equipment[0]?.id,
@@ -172,10 +172,14 @@ export function RequestWizard({
         <Button variant="secondary" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
           {t("common.back")}
         </Button>
+        {/* Distinct keys: React must not reuse the "next" button as the submit button, otherwise
+            the click that reveals the review step would also submit the form. */}
         {step < STEPS.length - 1 ? (
-          <Button onClick={next}>{t("common.next")}</Button>
+          <Button key="next" type="button" onClick={next}>
+            {t("common.next")}
+          </Button>
         ) : (
-          <Button type="submit" loading={isSubmitting}>
+          <Button key="submit" type="submit" loading={isSubmitting}>
             {t("customer.wizard.createDraft")}
           </Button>
         )}

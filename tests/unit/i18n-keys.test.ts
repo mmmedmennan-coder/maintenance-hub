@@ -54,6 +54,8 @@ const DYNAMIC_KEYS = [
   ...expand("enums.subscriptionEvent", ["PERIOD_RECORDED", "PLAN_ASSIGNED", "CORRECTION"]),
   ...expand("enums.occurrenceStatus", ["DRAFT_CREATED", "DISMISSED"]),
   ...expand("roles", ["customer_owner", "customer_manager", "customer_viewer", "provider_owner", "provider_dispatcher", "technician", "platform_admin"]),
+  "quote.approvedLine",
+  "quote.rejectedLine",
   ...expand("status.workOrder", WORK_STATUSES),
   ...expand("status.provider", PROVIDER_STATUSES),
 ];

@@ -45,7 +45,7 @@ type Values = z.input<typeof maintenancePlanSchema>;
 export function ProposePlanForm({ equipment, defaultEquipmentId, minDate }: { equipment: { id: string; label: string; siteName: string; city: string }[]; defaultEquipmentId?: string; minDate: string }) {
   const { run, error } = useAction();
   const form = useForm<Values>({
-    resolver: zodResolver(maintenancePlanSchema),
+    resolver: zodResolver(maintenancePlanSchema, undefined, { raw: true }),
     defaultValues: {
       equipmentId: equipment.some((e) => e.id === defaultEquipmentId) ? defaultEquipmentId : (equipment[0]?.id ?? ""),
       title: "",

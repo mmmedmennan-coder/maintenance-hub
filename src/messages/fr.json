@@ -1445,7 +1445,9 @@
     "warranty": "Garantie",
     "withdraw": "Retirer",
     "withdrawBody": "Le client ne pourra plus approuver cette version. Vous pourrez en émettre une nouvelle.",
-    "withdrawTitle": "Retirer ce devis ?"
+    "withdrawTitle": "Retirer ce devis ?",
+    "approvedLine": "Approuvé le {date} pour {amount}.",
+    "rejectedLine": "Refusé le {date} ({amount})."
   },
   "report": {
     "ack": {
