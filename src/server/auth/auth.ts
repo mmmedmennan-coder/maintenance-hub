@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
@@ -52,7 +53,8 @@ function buildAuth() {
     advanced: {
       cookiePrefix: "mh",
       useSecureCookies: production && env.APP_URL.startsWith("https://"),
-      database: { generateId: "uuid" },
+      // Ids are generated here (random UUID v4); the Prisma schema declares no database default.
+      database: { generateId: () => randomUUID() },
     },
     session: {
       expiresIn: 60 * 60 * 24 * 7,

@@ -71,6 +71,8 @@ describe("maintenance plans, booking expiry and worker durability", () => {
     await ownerDb().$executeRaw`UPDATE outbox_event SET status = 'PROCESSING', locked_by = 'dead-worker', locked_at = now() - interval '10 minutes' WHERE status = 'PENDING'`;
     const result = await processOutboxBatch(workerDb(), "fresh-worker", 50);
     expect(result.claimed).toBeGreaterThan(0);
+    // The shared test database may hold more than one batch of reclaimed events.
+    for (let i = 0; i < 50 && (await processOutboxBatch(workerDb(), "fresh-worker", 50)).claimed > 0; i++);
     const stuck = await ownerDb().outboxEvent.count({ where: { status: "PROCESSING" } });
     expect(stuck).toBe(0);
     const notes = await withActor(provider.manager, (tx) => tx.notification.count({ where: { type: "bookingRequested", link: `/prestataire/rendez-vous/${pending.bookingId}` } }));

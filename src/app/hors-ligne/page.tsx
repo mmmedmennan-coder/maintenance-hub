@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WifiOff } from "lucide-react";
 import type { Metadata } from "next";
 import { t } from "@/lib/i18n";
@@ -14,9 +15,9 @@ export default function OfflinePage() {
       </span>
       <h1 className="text-2xl font-bold text-ink">{t("app.offlineTitle")}</h1>
       <p className="text-ink-soft">{t("app.offlineBody")}</p>
-      <a href="/" className="inline-flex h-11 items-center rounded-lg bg-brand px-4 font-semibold text-white">
+      <Link href="/" className="inline-flex h-11 items-center rounded-lg bg-brand px-4 font-semibold text-white">
         {t("app.offlineRetry")}
-      </a>
+      </Link>
     </main>
   );
 }

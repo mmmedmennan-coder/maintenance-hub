@@ -35,7 +35,7 @@ export default async function SitePage({ params }: { params: Promise<{ id: strin
         meta={site.archivedAt ? <Badge>{t("customer.assets.archived")}</Badge> : site.serviceArea ? <Badge tone="brand">{site.serviceArea.name}</Badge> : <Badge tone="warn">{t("customer.sites.outsideArea")}</Badge>}
         actions={writer ? <ArchiveToggle kind="sites" id={site.id} archived={!!site.archivedAt} /> : null}
       />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title={t("customer.sites.equipmentTitle")} actions={writer && !site.archivedAt ? <ButtonLink size="sm" href={`/client/equipements/nouveau?site=${site.id}`}>{t("customer.equipment.new")}</ButtonLink> : null} />
           <CardBody>

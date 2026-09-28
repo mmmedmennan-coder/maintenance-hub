@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { t, te } from "@/lib/i18n";
 import { formatMoney, formatQuantity, formatRate } from "@/lib/money";
-import { addDaysToDateString, durationLabel, formatDate, formatDateTime, formatWindow, localDateString, localTimeString } from "@/lib/time";
+import { addDaysToDateString, durationLabel, formatDate, formatDateTime, formatWindow, localDateString, localTimeString, nowMs } from "@/lib/time";
 import { type Actor, can } from "@/server/auth/roles";
 import type { getBookingDetail } from "@/server/modules/bookings";
 import type { listPayments } from "@/server/modules/payments";
@@ -76,10 +76,10 @@ function QuoteVersionView({ v, docs, actions }: { v: Version; docs: Doc[]; actio
                   <span className="text-xs text-muted">{te("enums.lineKind", l.kind)}</span>
                   <span className="block">{l.description}</span>
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatQuantity(l.quantityMilli)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatMoney(l.unitPriceMinor, v.currency)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatRate(l.taxRateBp)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatMoney(l.totalMinor, v.currency)}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{formatQuantity(l.quantityMilli)}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{formatMoney(l.unitPriceMinor, v.currency)}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{formatRate(l.taxRateBp)}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{formatMoney(l.totalMinor, v.currency)}</td>
               </tr>
             ))}
           </tbody>
@@ -176,7 +176,7 @@ export function BookingView({
   const worker = providerManager || perspective === "technician";
   const partyWriter = customerWriter || providerManager;
   const mySide = perspective === "customer" ? "CUSTOMER" : "PROVIDER";
-  const now = Date.now();
+  const now = nowMs();
   const today = localDateString(new Date());
   const pendingProposal = booking.reschedules.find((r) => r.status === "PENDING");
   const quotes = wo?.repairQuotes ?? [];
@@ -277,7 +277,7 @@ export function BookingView({
 
       {adminSlot}
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div className="min-w-0 space-y-6">
           {wo && ["CONFIRMED", "COMPLETED"].includes(booking.status) ? (
             <Card>

@@ -90,7 +90,8 @@ model Verification {
 }
 
 model RateLimit {
-  id          String @id
+  // Better Auth does not supply an id for rate-limit rows; the client generates one.
+  id          String @id @default(uuid())
   key         String @unique
   count       Int
   lastRequest BigInt @map("last_request")

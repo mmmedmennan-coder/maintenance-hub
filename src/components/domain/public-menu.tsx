@@ -3,13 +3,18 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { t } from "@/lib/i18n";
 
 export function PublicMobileMenu({ links, account }: { links: { href: string; label: string }[]; account: { href: string; label: string } | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => setOpen(false), [pathname]);
+  // Close the menu after navigation (state reset on prop change, without an effect).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
   return (
     <div className="ml-auto sm:ml-2 md:hidden">
       <button

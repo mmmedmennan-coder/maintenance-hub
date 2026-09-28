@@ -16,7 +16,7 @@ export default async function AccountPage() {
   return (
     <>
       <PageHeader title={t("account.title")} description={t("account.intro")} />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <AccountForms name={actor.userName} email={actor.userEmail} />
         <Card>
           <CardHeader title={t("account.organizations")} description={t("account.organizationsIntro")} />

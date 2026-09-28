@@ -58,7 +58,7 @@ export default async function EquipmentPage({ params }: { params: Promise<{ id: 
           ) : null
         }
       />
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           <Card>
             <CardHeader title={t("customer.equipment.historyTitle")} description={t("customer.equipment.historyIntro")} />
@@ -88,7 +88,9 @@ export default async function EquipmentPage({ params }: { params: Promise<{ id: 
                       {w.repairQuotes.flatMap((q) => q.versions).length ? (
                         <ul className="mt-1 flex flex-wrap gap-1.5">
                           {w.repairQuotes.flatMap((q) => q.versions.map((v) => (
-                            <li key={v.id}><Badge tone={v.status === "APPROVED" ? "success" : "neutral"}>{q.title} v{v.versionNo} · {te("status.quote", v.status)} · {formatMoney(v.totalMinor, v.currency)}</Badge></li>
+                            <li key={v.id} className={`max-w-full rounded-lg border px-2 py-0.5 text-xs font-semibold ${v.status === "APPROVED" ? "border-success-line bg-success-soft text-success" : "border-line bg-subtle text-ink-soft"}`}>
+                              {q.title} v{v.versionNo} · {te("status.quote", v.status)} · {formatMoney(v.totalMinor, v.currency)}
+                            </li>
                           )))}
                         </ul>
                       ) : null}

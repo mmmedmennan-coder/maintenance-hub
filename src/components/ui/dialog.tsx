@@ -114,9 +114,14 @@ export function useAction() {
 
 /** Stable idempotency key for one logical submission; renew after a confirmed success. */
 export function useIdempotencyKey() {
-  const ref = useRef<string>("");
-  if (!ref.current) ref.current = newIdempotencyKey();
-  return { key: () => ref.current, renew: () => (ref.current = newIdempotencyKey()) };
+  const ref = useRef<string | null>(null);
+  // Created lazily on first use (in an event handler), reused for retries of the same submission.
+  return {
+    key: () => (ref.current ??= newIdempotencyKey()),
+    renew: () => {
+      ref.current = newIdempotencyKey();
+    },
+  };
 }
 
 /**

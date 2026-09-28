@@ -25,7 +25,7 @@ export default async function ProviderSubscriptionPage() {
       <Alert tone={entitlement.active ? "success" : "warn"} title={entitlement.active ? t("subscription.active") : t("subscription.inactive")} className="mb-6">
         {entitlement.paidUntil ? t("subscription.paidUntil", { date: formatCalendarDate(entitlement.paidUntil) }) : t("subscription.never")} {t("subscription.effect")}
       </Alert>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {plan ? (
           <Card>
             <CardHeader title={plan.name} description={t("subscription.planIntro")} />

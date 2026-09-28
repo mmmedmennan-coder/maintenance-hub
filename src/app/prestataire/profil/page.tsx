@@ -42,7 +42,7 @@ export default async function ProviderProfilePage() {
         {profile.statusReason ? ` ${t("booking.reason")} : ${profile.statusReason}` : ""}
         {profile.submittedAt ? ` · ${t("providerProfile.submittedAt", { date: formatDateTime(profile.submittedAt) })}` : ""}
       </Alert>
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader title={t("providerProfile.edit")} />
           <CardBody>

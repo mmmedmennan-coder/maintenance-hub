@@ -161,6 +161,11 @@ export function formatWindow(start: Date | string | null | undefined, end: Date 
   return `${formatDateTime(s)} – ${formatDateTime(e)}`;
 }
 
+/** Current instant in milliseconds; server components call it once per request. */
+export function nowMs(): number {
+  return Date.now();
+}
+
 export function minutesToLabel(minutes: number): string {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }

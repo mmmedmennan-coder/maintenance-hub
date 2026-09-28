@@ -40,7 +40,7 @@ export default async function TechniciansPage() {
                 </>
               }
             />
-            <CardBody className="grid gap-6 lg:grid-cols-2">
+            <CardBody className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <section className="space-y-3">
                 <h3 className="text-sm font-semibold">{t("technicians.windows")}</h3>
                 {tech.windows.length === 0 ? <p className="text-sm text-warn">{t("technicians.noWindows")}</p> : null}

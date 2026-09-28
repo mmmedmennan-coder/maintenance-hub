@@ -152,7 +152,12 @@ export function SidebarNav({ workspace }: { workspace: Workspace }) {
 export function MobileNav({ workspace, orgName }: { workspace: Workspace; orgName: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => setOpen(false), [pathname]);
+  // Close the menu after navigation (state reset on prop change, without an effect).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);

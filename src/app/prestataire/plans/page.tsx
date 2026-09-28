@@ -19,7 +19,7 @@ export default async function ProviderPlansPage({ searchParams }: { searchParams
   return (
     <>
       <PageHeader title={t("plans.title")} description={t("plans.providerIntro")} />
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         <PlansView plans={plans} side="PROVIDER" canAct={can.providerManage(actor)} />
         <Card>
           <CardHeader title={t("plans.proposeTitle")} description={t("plans.proposeIntro")} />

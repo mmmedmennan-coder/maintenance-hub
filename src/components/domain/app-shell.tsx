@@ -6,7 +6,6 @@ import type { Actor } from "@/server/auth/roles";
 import { getMemberships } from "@/server/auth/session";
 import { withActor } from "@/server/db/context";
 import { unreadCount } from "@/server/modules/notifications";
-import { Badge } from "@/components/ui/feedback";
 import { MobileNav, NotificationBell, OrgSwitcher, SidebarNav, SignOutButton, type Workspace } from "./shell-client";
 
 export function workspaceFor(actor: Actor): Workspace {
@@ -62,11 +61,7 @@ export async function AppShell({ actor, children }: { actor: Actor; children: Re
             <p className="text-xs text-muted">
               {actor.userName} · {t(`roles.${actor.role}`)}
             </p>
-            {demo ? (
-              <Badge tone="warn" className="mt-2">
-                {t("app.demoNotice")}
-              </Badge>
-            ) : null}
+            {demo ? <p className="mt-2 rounded-md border border-warn-line bg-warn-soft px-2 py-1 text-xs font-semibold text-warn">{t("app.demoNotice")}</p> : null}
           </div>
           <SidebarNav workspace={workspace} />
         </aside>

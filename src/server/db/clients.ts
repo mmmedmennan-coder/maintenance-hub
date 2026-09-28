@@ -2,6 +2,7 @@ import "server-only";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 import { getEnv } from "@/server/env";
+import { serialPool } from "./serial-pool";
 
 type Clients = { app?: PrismaClient; auth?: PrismaClient; worker?: PrismaClient };
 
@@ -9,11 +10,12 @@ type Clients = { app?: PrismaClient; auth?: PrismaClient; worker?: PrismaClient 
 const store = globalThis as unknown as { __maintenanceHubDb?: Clients };
 const clients: Clients = (store.__maintenanceHubDb ??= {});
 
+const pools: ReturnType<typeof serialPool>[] = [];
+
 function create(connectionString: string, max: number) {
-  return new PrismaClient({
-    adapter: new PrismaPg({ connectionString, max, idleTimeoutMillis: 30_000 }),
-    log: [{ emit: "stdout", level: "error" }],
-  });
+  const pool = serialPool(connectionString, max);
+  pools.push(pool);
+  return new PrismaClient({ adapter: new PrismaPg(pool), log: [{ emit: "stdout", level: "error" }] });
 }
 
 /** Web runtime role (mh_app): row-level security enforced. Use through withActor/withPublic. */
@@ -36,4 +38,5 @@ export function workerDb(): PrismaClient {
 export async function disconnectAll() {
   await Promise.all([clients.app?.$disconnect(), clients.auth?.$disconnect(), clients.worker?.$disconnect()]);
   clients.app = clients.auth = clients.worker = undefined;
+  await Promise.all(pools.splice(0).map((p) => p.end().catch(() => undefined)));
 }

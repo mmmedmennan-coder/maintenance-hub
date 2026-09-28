@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { t, te } from "@/lib/i18n";
 import { formatMoney, minorToInput } from "@/lib/money";
-import { addDaysToDateString, durationLabel, formatDateTime, formatWindow, localDateString, localTimeString } from "@/lib/time";
+import { addDaysToDateString, durationLabel, formatDateTime, formatWindow, localDateString, localTimeString, nowMs } from "@/lib/time";
 import { guard } from "@/server/auth/page-guard";
 import { withActor } from "@/server/db/context";
 import { DomainError } from "@/server/errors";
@@ -45,7 +45,7 @@ export default async function ProviderInvitationPage({ params }: { params: Promi
     serviceFee: base?.serviceFeeMinor ? minorToInput(base.serviceFeeMinor) : "",
     taxRate: base?.taxRateBp !== null && base?.taxRateBp !== undefined ? String(base.taxRateBp / 100).replace(".", ",") : "20",
     taxNote: base?.taxNote ?? "",
-    windowDate: windowStart && windowStart.getTime() > Date.now() ? localDateString(windowStart) : addDaysToDateString(today, 1),
+    windowDate: windowStart && windowStart.getTime() > nowMs() ? localDateString(windowStart) : addDaysToDateString(today, 1),
     windowStart: windowStart ? localTimeString(windowStart) : "09:00",
     windowEnd: windowEnd ? localTimeString(windowEnd) : "12:00",
     estimatedDurationMin: base?.estimatedDurationMin ?? (kind === "DIAGNOSTIC" ? 60 : 120),
@@ -82,7 +82,7 @@ export default async function ProviderInvitationPage({ params }: { params: Promi
           </Link>
         </Alert>
       ) : null}
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.4fr]">
         <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title={t("providerInvitations.brief")} description={t("providerInvitations.briefNote")} />

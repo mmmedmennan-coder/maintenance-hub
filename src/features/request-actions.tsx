@@ -169,11 +169,11 @@ export function DraftEditForm({
       <Field label={t("customer.wizard.symptoms")} error={errors.symptoms?.message} required>
         <Textarea rows={4} {...form.register("symptoms")} />
       </Field>
-      <fieldset className="space-y-2">
+      <fieldset className="@container space-y-2">
         <legend className="text-sm font-semibold">{t("customer.wizard.windowsTitle")}</legend>
         {windows.fields.map((f, i) => (
-          <div key={f.id} className="grid items-end gap-2 sm:grid-cols-[1.3fr_1fr_1fr_auto]">
-            <Field label={t("customer.wizard.date")} error={errors.preferredWindows?.[i]?.date?.message}>
+          <div key={f.id} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 @lg:grid-cols-[1.3fr_1fr_1fr_auto]">
+            <Field label={t("customer.wizard.date")} error={errors.preferredWindows?.[i]?.date?.message} className="col-span-3 @lg:col-span-1">
               <Input type="date" min={tomorrow} {...form.register(`preferredWindows.${i}.date`)} />
             </Field>
             <Field label={t("customer.wizard.from")} error={errors.preferredWindows?.[i]?.start?.message}>

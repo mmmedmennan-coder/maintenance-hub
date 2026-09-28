@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { t, te } from "@/lib/i18n";
-import { addDaysToDateString, formatDateTime, formatWindow, localDateString, localTimeString, minutesToLabel } from "@/lib/time";
+import { addDaysToDateString, formatDateTime, formatWindow, localDateString, localTimeString, minutesToLabel, nowMs } from "@/lib/time";
 import { can } from "@/server/auth/roles";
 import { guard } from "@/server/auth/page-guard";
 import { withActor } from "@/server/db/context";
@@ -41,7 +41,7 @@ export default async function RequestDetailPage({ params, searchParams }: { para
   const invitedIds = new Set(request.invitations.map((i) => i.providerOrgId));
   const activeBooking = request.bookings.find((b) => ["PENDING_CONFIRMATION", "CONFIRMED", "COMPLETED"].includes(b.status));
   const lastBooking = request.bookings[0];
-  const now = Date.now();
+  const now = nowMs();
 
   const comparable: ComparableOffer[] = offers
     .filter((o) => o.versions.length > 0)
@@ -154,7 +154,7 @@ export default async function RequestDetailPage({ params, searchParams }: { para
         </Alert>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="min-w-0 space-y-6">
           {request.status !== "DRAFT" && request.kind !== "BREAKDOWN" && request.status === "OPEN" && writer ? (
             <Card>
