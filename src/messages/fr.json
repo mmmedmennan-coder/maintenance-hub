@@ -1,0 +1,481 @@
+{
+  "app": {
+    "name": "Maintenance Hub",
+    "workingName": "Nom de travail provisoire",
+    "tagline": "La maintenance du froid commercial, de la demande au rapport.",
+    "demoBadge": "Démonstration",
+    "demoNotice": "Données de démonstration fictives",
+    "skipToContent": "Aller au contenu",
+    "offlineTitle": "Vous êtes hors ligne",
+    "offlineBody": "La connexion est nécessaire pour consulter ou enregistrer vos dossiers. Aucune action n'est enregistrée hors ligne. Réessayez lorsque le réseau est rétabli.",
+    "offlineRetry": "Réessayer"
+  },
+  "roles": {
+    "customer_owner": "Propriétaire (client)",
+    "customer_manager": "Responsable (client)",
+    "customer_viewer": "Lecteur (client)",
+    "provider_owner": "Propriétaire (prestataire)",
+    "provider_dispatcher": "Planificateur",
+    "technician": "Technicien",
+    "platform_admin": "Administrateur plateforme"
+  },
+  "orgType": {
+    "CUSTOMER": "Entreprise cliente",
+    "PROVIDER": "Prestataire de maintenance",
+    "PLATFORM": "Plateforme"
+  },
+  "enums": {
+    "requestKind": {
+      "DIAGNOSTIC": "Visite de diagnostic",
+      "MAINTENANCE": "Maintenance planifiée",
+      "BREAKDOWN": "Panne (routage assisté)"
+    },
+    "offerKind": {
+      "DIAGNOSTIC": "Diagnostic",
+      "MAINTENANCE": "Maintenance"
+    },
+    "lineKind": {
+      "PART": "Pièce",
+      "LABOR": "Main-d'œuvre",
+      "TRAVEL": "Déplacement",
+      "OTHER": "Autre"
+    },
+    "paymentMethod": {
+      "CASH": "Espèces",
+      "BANK_TRANSFER": "Virement bancaire",
+      "CHEQUE": "Chèque",
+      "OTHER_EXTERNAL": "Autre moyen externe"
+    },
+    "noteVisibility": {
+      "SHARED": "Partagée avec l'autre partie",
+      "PROVIDER_INTERNAL": "Interne au prestataire",
+      "CUSTOMER_PRIVATE": "Privée (client)"
+    },
+    "checkType": {
+      "BUSINESS_IDENTITY": "Identité de l'entreprise",
+      "TECHNICAL_EXPERIENCE": "Expérience technique déclarée",
+      "REFERENCES": "Références clients",
+      "INSURANCE": "Assurance",
+      "QUALIFICATION": "Qualification"
+    },
+    "checkMeaning": {
+      "BUSINESS_IDENTITY": "La raison sociale et l'immatriculation ont été contrôlées sur document. Ce contrôle ne prouve pas la compétence technique.",
+      "TECHNICAL_EXPERIENCE": "L'expérience déclarée a été examinée sur pièces. Il ne s'agit pas d'une certification.",
+      "REFERENCES": "Des références clients ont été contactées par la plateforme.",
+      "INSURANCE": "Une attestation d'assurance valide à la date du contrôle a été présentée.",
+      "QUALIFICATION": "Une qualification ou habilitation déclarée a été vue sur document."
+    },
+    "partySide": {
+      "CUSTOMER": "Client",
+      "PROVIDER": "Prestataire",
+      "PLATFORM": "Plateforme"
+    },
+    "documentKind": {
+      "PHOTO": "Photo",
+      "ATTACHMENT": "Pièce jointe",
+      "REPORT_PDF": "Rapport PDF",
+      "QUOTE_PDF": "Devis PDF",
+      "PAYMENT_EVIDENCE": "Justificatif de paiement"
+    },
+    "documentVisibility": {
+      "OWNER_ONLY": "Privé",
+      "SHARED_PARTIES": "Partagé avec l'autre partie",
+      "QUOTING_SHARED": "Partagé avec les prestataires invités"
+    },
+    "requestSource": {
+      "MARKETPLACE": "Place de marché",
+      "BREAKDOWN_ROUTING": "Routage assisté",
+      "MAINTENANCE_PLAN": "Plan de maintenance"
+    },
+    "supportTopic": {
+      "CUSTOMER": "Je suis un client",
+      "PROVIDER": "Je suis un prestataire",
+      "ACCOUNT": "Mon compte",
+      "OTHER": "Autre"
+    },
+    "weekday": {
+      "1": "Lundi",
+      "2": "Mardi",
+      "3": "Mercredi",
+      "4": "Jeudi",
+      "5": "Vendredi",
+      "6": "Samedi",
+      "7": "Dimanche"
+    },
+    "weekdayShort": {
+      "1": "Lun",
+      "2": "Mar",
+      "3": "Mer",
+      "4": "Jeu",
+      "5": "Ven",
+      "6": "Sam",
+      "7": "Dim"
+    },
+    "jobEvent": {
+      "BOOKING_REQUESTED": "Offre retenue — confirmation demandée",
+      "BOOKING_CONFIRMED": "Rendez-vous confirmé",
+      "BOOKING_DECLINED": "Rendez-vous décliné",
+      "BOOKING_EXPIRED": "Délai de confirmation dépassé",
+      "BOOKING_CANCELLED": "Rendez-vous annulé",
+      "NO_SHOW_REPORTED": "Absence signalée",
+      "RESCHEDULE_PROPOSED": "Replanification proposée",
+      "RESCHEDULE_ACCEPTED": "Replanification acceptée",
+      "RESCHEDULE_REJECTED": "Replanification refusée",
+      "EN_ROUTE": "Technicien en route",
+      "ON_SITE": "Technicien sur site",
+      "REPAIR_QUOTE_ISSUED": "Devis de réparation émis",
+      "REPAIR_QUOTE_APPROVED": "Devis approuvé",
+      "REPAIR_QUOTE_REJECTED": "Devis refusé",
+      "REPAIR_QUOTE_WITHDRAWN": "Devis retiré",
+      "WORK_STARTED": "Travaux commencés",
+      "AWAITING_PARTS": "En attente de pièces",
+      "REPORT_SUBMITTED": "Rapport soumis",
+      "ACKNOWLEDGED": "Rapport pris en compte par le client",
+      "DISPUTE_OPENED": "Litige ouvert",
+      "DISPUTE_UPDATED": "Litige mis à jour",
+      "DISPUTE_RESOLVED": "Litige résolu",
+      "PAYMENT_REPORTED": "Paiement déclaré par le client",
+      "PAYMENT_CONFIRMED": "Réception du paiement confirmée",
+      "PAYMENT_REJECTED": "Réception non confirmée",
+      "PAYMENT_REVERSED": "Paiement contre-passé"
+    }
+  },
+  "status": {
+    "request": {
+      "DRAFT": "Brouillon",
+      "OPEN": "Ouverte",
+      "BOOKING": "Réservation en cours",
+      "CLOSED": "Clôturée",
+      "CANCELLED": "Annulée"
+    },
+    "invitation": {
+      "INVITED": "Invité — sans réponse",
+      "DECLINED": "Décliné",
+      "OFFERED": "Offre émise",
+      "REVOKED": "Invitation retirée",
+      "CLOSED": "Clôturée"
+    },
+    "offer": {
+      "OPEN": "Ouverte",
+      "WITHDRAWN": "Retirée",
+      "SELECTED": "Retenue",
+      "CLOSED": "Clôturée"
+    },
+    "offerVersion": {
+      "DRAFT": "Brouillon",
+      "ISSUED": "Émise",
+      "SUPERSEDED": "Remplacée",
+      "WITHDRAWN": "Retirée",
+      "SELECTED": "Retenue",
+      "NOT_SELECTED": "Non retenue",
+      "RELEASED": "Libérée",
+      "EXPIRED": "Expirée"
+    },
+    "booking": {
+      "PENDING_CONFIRMATION": "En attente de confirmation",
+      "CONFIRMED": "Confirmé",
+      "DECLINED": "Décliné par le prestataire",
+      "EXPIRED": "Expiré (non confirmé)",
+      "CANCELLED": "Annulé",
+      "NO_SHOW": "Absence signalée",
+      "COMPLETED": "Intervention terminée"
+    },
+    "workOrder": {
+      "SCHEDULED": "Planifiée",
+      "EN_ROUTE": "En route",
+      "ON_SITE": "Sur site",
+      "AWAITING_APPROVAL": "En attente d'approbation",
+      "DIAGNOSED": "Diagnostic effectué",
+      "AWAITING_PARTS": "En attente de pièces",
+      "IN_PROGRESS": "Travaux en cours",
+      "REPORT_SUBMITTED": "Rapport soumis",
+      "CANCELLED": "Annulée"
+    },
+    "ack": {
+      "PENDING": "Accusé de réception en attente",
+      "ACKNOWLEDGED": "Rapport pris en compte",
+      "DISPUTED": "Contesté"
+    },
+    "quote": {
+      "DRAFT": "Brouillon",
+      "ISSUED": "À approuver",
+      "SUPERSEDED": "Remplacé",
+      "APPROVED": "Approuvé",
+      "REJECTED": "Refusé",
+      "WITHDRAWN": "Retiré"
+    },
+    "payment": {
+      "REPORTED": "Déclaré par le client",
+      "CONFIRMED": "Réception confirmée",
+      "REJECTED": "Réception non confirmée",
+      "REVERSED": "Contre-passé"
+    },
+    "plan": {
+      "PROPOSED": "Proposé — accord du client requis",
+      "ACTIVE": "Actif",
+      "PAUSED": "En pause",
+      "ENDED": "Terminé",
+      "DECLINED": "Refusé"
+    },
+    "review": {
+      "PENDING_MODERATION": "En modération",
+      "PUBLISHED": "Publié",
+      "REJECTED": "Refusé"
+    },
+    "dispute": {
+      "OPEN": "Ouvert",
+      "UNDER_REVIEW": "En cours d'examen",
+      "RESOLVED": "Résolu",
+      "WITHDRAWN": "Retiré"
+    },
+    "provider": {
+      "DRAFT": "Brouillon",
+      "SUBMITTED": "En cours de vérification",
+      "APPROVED": "Approuvé",
+      "REJECTED": "Refusé",
+      "SUSPENDED": "Suspendu"
+    },
+    "check": {
+      "PENDING": "En attente",
+      "VERIFIED": "Vérifié",
+      "REJECTED": "Non validé",
+      "EXPIRED": "Expiré"
+    },
+    "document": {
+      "PENDING": "Envoi en cours",
+      "READY": "Enregistré",
+      "FAILED": "Échec — non enregistré",
+      "DELETED": "Supprimé"
+    },
+    "reschedule": {
+      "PENDING": "En attente de réponse",
+      "ACCEPTED": "Acceptée",
+      "REJECTED": "Refusée",
+      "WITHDRAWN": "Retirée"
+    },
+    "subscription": {
+      "ACTIVE": "Actif",
+      "INACTIVE": "Inactif",
+      "NONE": "Aucune période enregistrée"
+    }
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "network": "Connexion impossible. Vérifiez votre réseau puis réessayez. Rien n'a été enregistré.",
+    "staffLimit": "Votre formule permet {limit} comptes (membres et invitations en attente compris).",
+    "notFoundTitle": "Page introuvable",
+    "notFoundBody": "Cette page n'existe pas ou vous n'y avez pas accès.",
+    "serverTitle": "Une erreur est survenue",
+    "serverBody": "La page n'a pas pu être chargée. Vos données n'ont pas été modifiées.",
+    "retry": "Réessayer",
+    "backHome": "Retour à l'accueil",
+    "conflictRefresh": "Les informations ont changé. Actualisez la page puis recommencez."
+  },
+  "email": {
+    "verify": {
+      "subject": "Confirmez votre adresse e-mail — {app}",
+      "body": "Bonjour {name},\n\nConfirmez votre adresse e-mail pour activer votre compte :\n{url}\n\nCe lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message."
+    },
+    "resetPassword": {
+      "subject": "Réinitialisation du mot de passe — {app}",
+      "body": "Bonjour {name},\n\nPour choisir un nouveau mot de passe, ouvrez ce lien (valable 1 heure) :\n{url}\n\nSi vous n'avez rien demandé, ignorez ce message : votre mot de passe reste inchangé."
+    },
+    "staffInvite": {
+      "subject": "Invitation à rejoindre {org} sur {app}",
+      "body": "Bonjour,\n\n{inviter} vous invite à rejoindre {org} avec le rôle « {role} ».\n\nPour accepter, créez un compte (ou connectez-vous) avec cette adresse e-mail, puis ouvrez :\n{url}\n\nCette invitation expire dans {days} jours."
+    },
+    "referral": {
+      "subject": "{org} vous invite à rejoindre {app}",
+      "body": "Bonjour {company},\n\n{org} souhaite coordonner ses interventions de maintenance avec vous sur {app}.\n{message}\n\nPour créer votre espace prestataire : {url}\n\nImportant : l'apparition dans l'annuaire nécessite la vérification de votre entreprise par la plateforme."
+    },
+    "notification": {
+      "body": "Bonjour {name},\n\n{body}\n\nOuvrir : {url}\n\n— {app}\nVous recevez ce message car vous êtes membre d'une organisation concernée."
+    }
+  },
+  "notify": {
+    "breakdownToRoute": {
+      "title": "Panne à router",
+      "body": "La demande {ref} ({city}) attend un prestataire disponible."
+    },
+    "newInvitation": {
+      "title": "Nouvelle demande de devis",
+      "body": "{kind} à {city} (demande {ref}). Consultez le brief et envoyez votre offre."
+    },
+    "invitationDeclined": {
+      "title": "Un prestataire a décliné",
+      "body": "{provider} a décliné votre demande. Vous pouvez inviter un autre prestataire."
+    },
+    "invitationClosed": {
+      "title": "Demande attribuée",
+      "body": "Le client a confirmé un rendez-vous avec un autre prestataire. Votre offre n'a pas été retenue."
+    },
+    "offerReceived": {
+      "title": "Nouvelle offre reçue",
+      "body": "{provider} vous propose une offre ({total}). Comparez les offres reçues."
+    },
+    "offerRevised": {
+      "title": "Offre révisée",
+      "body": "{provider} a révisé son offre ({total}). La version précédente n'est plus sélectionnable."
+    },
+    "offerWithdrawn": {
+      "title": "Offre retirée",
+      "body": "{provider} a retiré son offre."
+    },
+    "bookingRequested": {
+      "title": "Votre offre a été retenue",
+      "body": "Confirmez un technicien et un créneau pour le rendez-vous {ref} avant le {deadline}."
+    },
+    "bookingConfirmed": {
+      "title": "Rendez-vous confirmé",
+      "body": "Rendez-vous {ref} confirmé le {date} avec {technician}."
+    },
+    "jobAssigned": {
+      "title": "Nouvelle intervention assignée",
+      "body": "Intervention {ref} le {date}."
+    },
+    "bookingDeclined": {
+      "title": "Rendez-vous décliné",
+      "body": "{provider} a décliné le rendez-vous {ref}. Rouvrez la demande pour choisir une autre offre."
+    },
+    "bookingExpired": {
+      "title": "Rendez-vous non confirmé",
+      "body": "Le rendez-vous {ref} n'a pas été confirmé avant le {deadline}. Rouvrez la demande pour choisir une autre offre."
+    },
+    "bookingCancelled": {
+      "title": "Rendez-vous annulé",
+      "body": "Le rendez-vous {ref} a été annulé. Motif : {reason}"
+    },
+    "noShowReported": {
+      "title": "Absence signalée",
+      "body": "Une absence a été signalée pour le rendez-vous {ref}."
+    },
+    "rescheduleProposed": {
+      "title": "Nouveau créneau proposé",
+      "body": "Un nouveau créneau est proposé : {date}. Votre réponse est nécessaire."
+    },
+    "rescheduled": {
+      "title": "Rendez-vous replanifié",
+      "body": "Le rendez-vous {ref} est désormais prévu le {date} avec {technician}."
+    },
+    "rescheduleRejected": {
+      "title": "Replanification refusée",
+      "body": "Votre proposition de nouveau créneau a été refusée. Le rendez-vous initial est maintenu."
+    },
+    "workStatus": {
+      "title": "Suivi d'intervention",
+      "body": "Intervention {ref} : {status}."
+    },
+    "repairQuoteIssued": {
+      "title": "Devis de réparation à approuver",
+      "body": "Un devis de {total} vous attend pour l'intervention {ref}. Les travaux ne commencent qu'après votre approbation."
+    },
+    "repairQuoteApproved": {
+      "title": "Devis approuvé",
+      "body": "Le client a approuvé le devis ({total}) de l'intervention {ref}."
+    },
+    "repairQuoteRejected": {
+      "title": "Devis refusé",
+      "body": "Le client a refusé le devis ({total}) de l'intervention {ref}."
+    },
+    "reportSubmitted": {
+      "title": "Rapport d'intervention disponible",
+      "body": "Le rapport de l'intervention {ref} est disponible. Prenez-en connaissance ou signalez un problème."
+    },
+    "reportAcknowledged": {
+      "title": "Rapport pris en compte",
+      "body": "Le client a pris en compte le rapport de l'intervention {ref}."
+    },
+    "disputeOpened": {
+      "title": "Litige ouvert",
+      "body": "Le client conteste l'intervention {ref}."
+    },
+    "disputeUpdated": {
+      "title": "Litige mis à jour",
+      "body": "Le litige sur l'intervention {ref} est : {status}."
+    },
+    "paymentReported": {
+      "title": "Paiement déclaré",
+      "body": "Le client déclare un paiement de {amount}. Confirmez sa réception ou indiquez qu'il n'a pas été reçu."
+    },
+    "paymentRecorded": {
+      "title": "Paiement enregistré",
+      "body": "Le prestataire a enregistré la réception de {amount}."
+    },
+    "paymentUpdated": {
+      "title": "Paiement mis à jour",
+      "body": "Paiement de {amount} : {status}."
+    },
+    "planProposed": {
+      "title": "Plan de maintenance proposé",
+      "body": "{provider} propose « {title} ». Votre accord est nécessaire."
+    },
+    "planUpdated": {
+      "title": "Plan de maintenance mis à jour",
+      "body": "« {title} » : {status}."
+    },
+    "maintenanceDue": {
+      "title": "Maintenance à planifier",
+      "body": "« {title} » arrive à échéance le {date}. Un brouillon de demande a été préparé : vérifiez-le puis soumettez-le."
+    },
+    "maintenanceDueProvider": {
+      "title": "Échéance de maintenance",
+      "body": "« {title} » arrive à échéance le {date}. Le client a reçu un brouillon de demande."
+    },
+    "reviewToModerate": {
+      "title": "Avis à modérer",
+      "body": "Un nouvel avis client attend la modération."
+    },
+    "providerSubmitted": {
+      "title": "Prestataire à vérifier",
+      "body": "{provider} a soumis son profil pour vérification."
+    },
+    "providerStatus": {
+      "title": "Statut de votre profil",
+      "body": "Votre profil prestataire est désormais : {status}."
+    }
+  },
+  "pdf": {
+    "parties": "Parties",
+    "customer": "Client",
+    "provider": "Prestataire",
+    "site": "Site",
+    "equipment": "Équipement",
+    "technician": "Technicien",
+    "visit": "Visite",
+    "integrity": "Intégrité du document",
+    "report": {
+      "title": "Rapport d'intervention",
+      "content": "Constat et travaux",
+      "findings": "Constat",
+      "work": "Travaux réalisés",
+      "parts": "Pièces utilisées",
+      "recommendations": "Recommandations",
+      "nextService": "Prochaine intervention proposée",
+      "noNextService": "Aucune date proposée",
+      "scope": "Périmètre approuvé",
+      "noRepair": "Aucun devis de réparation n'a été approuvé pour cette visite.",
+      "repairDeclined": "Le client a refusé la réparation proposée : seule la visite de diagnostic a été réalisée.",
+      "approvedOn": "approuvé le",
+      "photos": "Photos",
+      "submittedBy": "Soumis par",
+      "disclaimer": "Ce rapport consigne l'intervention déclarée par le prestataire. Il ne constitue pas un certificat de sécurité alimentaire ni une garantie au-delà des conditions convenues entre les parties."
+    },
+    "quote": {
+      "version": "Version",
+      "issuedOn": "émise le",
+      "scope": "Périmètre des travaux",
+      "lines": "Détail",
+      "tax": "TVA",
+      "subtotal": "Total hors taxes",
+      "taxTotal": "Taxes",
+      "total": "Total",
+      "terms": "Conditions",
+      "duration": "Durée estimée",
+      "timing": "Délai",
+      "exclusions": "Exclusions",
+      "warranty": "Garantie",
+      "validUntil": "Valable jusqu'au",
+      "disclaimer": "Taux de taxe saisis par le prestataire. Ce document n'est pas une facture. Tout travail supplémentaire nécessite un nouveau devis approuvé."
+    }
+  }
+}

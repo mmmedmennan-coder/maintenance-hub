@@ -1,0 +1,1525 @@
+// Maintenance Hub — data model.
+//
+// Conventions
+// - Tables and columns are snake_case (via @map) so the SQL migrations that add
+//   row-level security, exclusion constraints and composite foreign keys stay readable.
+// - Money is stored as integer minor units (centimes) with an explicit ISO currency.
+// - Instants are timestamptz (UTC). Calendar dates are `date`.
+// - Organization and user foreign keys, composite ownership keys, exclusion
+//   constraints, partial unique indexes, immutability triggers and RLS policies are
+//   declared in prisma/migrations/*_security/migration.sql (Prisma cannot express them).
+//   Generate schema diffs with `npm run db:diff`, never `prisma migrate dev`, which would
+//   try to drop those objects.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Identity (Better Auth core + organization plugin)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  sessions    Session[]
+  accounts    Account[]
+  members     Member[]
+  invitations Invitation[] @relation("InvitationInviter")
+
+  @@map("user")
+}
+
+model Session {
+  id                   String   @id
+  expiresAt            DateTime @map("expires_at") @db.Timestamptz(3)
+  token                String   @unique
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+  userId               String   @map("user_id")
+  activeOrganizationId String?  @map("active_organization_id")
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@map("rate_limit")
+}
+
+enum OrgType {
+  CUSTOMER
+  PROVIDER
+  PLATFORM
+}
+
+model Organization {
+  id         String    @id
+  name       String
+  slug       String    @unique
+  logo       String?
+  metadata   String?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  type       OrgType
+  city       String?
+  isDemo     Boolean   @default(false) @map("is_demo")
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+
+  members         Member[]
+  invitations     Invitation[]
+  providerProfile ProviderProfile?
+
+  @@index([type])
+  @@map("organization")
+}
+
+/// Membership roles (enforced by a CHECK constraint and by role/org-type rules):
+/// customer_owner, customer_manager, customer_viewer,
+/// provider_owner, provider_dispatcher, technician, platform_admin
+model Member {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  role           String
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  email          String
+  role           String?
+  status         String       @default("pending")
+  expiresAt      DateTime     @map("expires_at") @db.Timestamptz(3)
+  inviterId      String       @map("inviter_id")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter        User         @relation("InvitationInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([email, status])
+  @@map("invitation")
+}
+
+// ---------------------------------------------------------------------------
+// Reference data
+// ---------------------------------------------------------------------------
+
+model ServiceCategory {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  labelFr   String   @map("label_fr")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  equipmentCategories EquipmentCategory[]
+
+  @@map("service_category")
+}
+
+model EquipmentCategory {
+  id                 String             @id @default(uuid())
+  serviceCategoryId  String             @map("service_category_id")
+  code               String             @unique
+  labelFr            String             @map("label_fr")
+  active             Boolean            @default(true)
+  sortOrder          Int                @default(0) @map("sort_order")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  serviceCategory    ServiceCategory    @relation(fields: [serviceCategoryId], references: [id], onDelete: Restrict)
+  providerCategories ProviderCategory[]
+  technicianSkills   TechnicianSkill[]
+  equipment          Equipment[]
+  serviceRequests    ServiceRequest[]
+
+  @@map("equipment_category")
+}
+
+model ServiceArea {
+  id                   String                @id @default(uuid())
+  code                 String                @unique
+  name                 String
+  cities               String[]
+  timezone             String                @default("Africa/Casablanca")
+  /// Published routing-desk hours: { "1": [480, 1080], ... } ISO weekday -> [startMinute, endMinute] local time.
+  routingHours         Json                  @map("routing_hours")
+  active               Boolean               @default(true)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  providerServiceAreas ProviderServiceArea[]
+  sites                Site[]
+  serviceRequests      ServiceRequest[]
+
+  @@map("service_area")
+}
+
+// ---------------------------------------------------------------------------
+// Providers
+// ---------------------------------------------------------------------------
+
+enum ProviderStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model ProviderProfile {
+  id            String         @id @default(uuid())
+  providerOrgId String         @unique @map("provider_org_id")
+  slug          String         @unique
+  displayName   String         @map("display_name")
+  summary       String
+  description   String
+  city          String
+  /// Published service hours: { "1": [480, 1080], ... } ISO weekday -> [startMinute, endMinute] local time.
+  serviceHours  Json           @map("service_hours")
+  status        ProviderStatus @default(DRAFT)
+  statusReason  String?        @map("status_reason")
+  submittedAt   DateTime?      @map("submitted_at") @db.Timestamptz(3)
+  reviewedAt    DateTime?      @map("reviewed_at") @db.Timestamptz(3)
+  reviewedById  String?        @map("reviewed_by_id")
+  isDemo        Boolean        @default(false) @map("is_demo")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version       Int            @default(1)
+
+  organization Organization          @relation(fields: [providerOrgId], references: [id], onDelete: Restrict)
+  serviceAreas ProviderServiceArea[]
+  categories   ProviderCategory[]
+  checks       ProviderCheck[]
+
+  @@index([status])
+  @@map("provider_profile")
+}
+
+model ProviderServiceArea {
+  providerProfileId String          @map("provider_profile_id")
+  serviceAreaId     String          @map("service_area_id")
+  providerOrgId     String          @map("provider_org_id")
+  profile           ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
+  serviceArea       ServiceArea     @relation(fields: [serviceAreaId], references: [id], onDelete: Restrict)
+
+  @@id([providerProfileId, serviceAreaId])
+  @@index([serviceAreaId])
+  @@map("provider_service_area")
+}
+
+model ProviderCategory {
+  providerProfileId   String            @map("provider_profile_id")
+  equipmentCategoryId String            @map("equipment_category_id")
+  providerOrgId       String            @map("provider_org_id")
+  profile             ProviderProfile   @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
+  equipmentCategory   EquipmentCategory @relation(fields: [equipmentCategoryId], references: [id], onDelete: Restrict)
+
+  @@id([providerProfileId, equipmentCategoryId])
+  @@index([equipmentCategoryId])
+  @@map("provider_category")
+}
+
+enum CheckType {
+  BUSINESS_IDENTITY
+  TECHNICAL_EXPERIENCE
+  REFERENCES
+  INSURANCE
+  QUALIFICATION
+}
+
+enum CheckStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+model ProviderCheck {
+  id                String          @id @default(uuid())
+  providerProfileId String          @map("provider_profile_id")
+  providerOrgId     String          @map("provider_org_id")
+  type              CheckType
+  status            CheckStatus     @default(PENDING)
+  /// Text shown on the public profile next to the badge (what exactly was checked).
+  publicNote        String?         @map("public_note")
+  /// Administrator-only note; never selected by public projections.
+  internalNote      String?         @map("internal_note")
+  checkedById       String?         @map("checked_by_id")
+  checkedAt         DateTime?       @map("checked_at") @db.Timestamptz(3)
+  expiresAt         DateTime?       @map("expires_at") @db.Timestamptz(3)
+  isDemo            Boolean         @default(false) @map("is_demo")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  profile           ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([providerProfileId, type])
+  @@map("provider_check")
+}
+
+model TechnicianProfile {
+  id            String   @id @default(uuid())
+  providerOrgId String   @map("provider_org_id")
+  userId        String?  @map("user_id")
+  displayName   String   @map("display_name")
+  phone         String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  skills       TechnicianSkill[]
+  windows      AvailabilityWindow[]
+  timeOff      TimeOff[]
+  reservations AppointmentReservation[]
+
+  @@unique([providerOrgId, userId])
+  @@index([providerOrgId, active])
+  @@map("technician_profile")
+}
+
+model TechnicianSkill {
+  technicianId        String            @map("technician_id")
+  equipmentCategoryId String            @map("equipment_category_id")
+  providerOrgId       String            @map("provider_org_id")
+  technician          TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  equipmentCategory   EquipmentCategory @relation(fields: [equipmentCategoryId], references: [id], onDelete: Restrict)
+
+  @@id([technicianId, equipmentCategoryId])
+  @@map("technician_skill")
+}
+
+/// Recurring weekly availability in the service-area local time (Africa/Casablanca).
+model AvailabilityWindow {
+  id            String            @id @default(uuid())
+  providerOrgId String            @map("provider_org_id")
+  technicianId  String            @map("technician_id")
+  /// ISO weekday 1 = Monday ... 7 = Sunday
+  weekday       Int
+  startMinute   Int               @map("start_minute")
+  endMinute     Int               @map("end_minute")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  technician    TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId, weekday])
+  @@map("availability_window")
+}
+
+model TimeOff {
+  id            String            @id @default(uuid())
+  providerOrgId String            @map("provider_org_id")
+  technicianId  String            @map("technician_id")
+  startsAt      DateTime          @map("starts_at") @db.Timestamptz(3)
+  endsAt        DateTime          @map("ends_at") @db.Timestamptz(3)
+  reason        String?
+  createdById   String            @map("created_by_id")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  technician    TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId, startsAt])
+  @@map("time_off")
+}
+
+enum ReservationStatus {
+  ACTIVE
+  RELEASED
+}
+
+/// Technician capacity. An exclusion constraint on
+/// (technician_id, tstzrange(blocked_start, blocked_end, '[)')) WHERE status = 'ACTIVE'
+/// prevents overlapping active reservations, travel/setup buffers included.
+model AppointmentReservation {
+  id              String            @id @default(uuid())
+  providerOrgId   String            @map("provider_org_id")
+  technicianId    String            @map("technician_id")
+  bookingId       String            @map("booking_id")
+  startsAt        DateTime          @map("starts_at") @db.Timestamptz(3)
+  endsAt          DateTime          @map("ends_at") @db.Timestamptz(3)
+  bufferBeforeMin Int               @default(0) @map("buffer_before_min")
+  bufferAfterMin  Int               @default(0) @map("buffer_after_min")
+  blockedStart    DateTime          @map("blocked_start") @db.Timestamptz(3)
+  blockedEnd      DateTime          @map("blocked_end") @db.Timestamptz(3)
+  status          ReservationStatus @default(ACTIVE)
+  releasedAt      DateTime?         @map("released_at") @db.Timestamptz(3)
+  releaseReason   String?           @map("release_reason")
+  createdById     String            @map("created_by_id")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  technician      TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Restrict)
+  booking         Booking           @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  @@index([providerOrgId, startsAt])
+  @@index([bookingId])
+  @@map("appointment_reservation")
+}
+
+// ---------------------------------------------------------------------------
+// Customer assets
+// ---------------------------------------------------------------------------
+
+model Site {
+  id            String    @id @default(uuid())
+  customerOrgId String    @map("customer_org_id")
+  name          String
+  addressLine   String    @map("address_line")
+  city          String
+  serviceAreaId String?   @map("service_area_id")
+  /// Access instructions: shown to a provider only once an appointment is confirmed.
+  accessNotes   String?   @map("access_notes")
+  contactName   String?   @map("contact_name")
+  contactPhone  String?   @map("contact_phone")
+  archivedAt    DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version       Int       @default(1)
+
+  serviceArea     ServiceArea?     @relation(fields: [serviceAreaId], references: [id], onDelete: Restrict)
+  equipment       Equipment[]
+  serviceRequests ServiceRequest[]
+  bookings        Booking[]
+  workOrders      WorkOrder[]
+
+  @@index([customerOrgId, archivedAt])
+  @@map("site")
+}
+
+model Equipment {
+  id            String    @id @default(uuid())
+  customerOrgId String    @map("customer_org_id")
+  siteId        String    @map("site_id")
+  categoryId    String    @map("category_id")
+  label         String
+  brand         String?
+  model         String?
+  serialNumber  String?   @map("serial_number")
+  installedYear Int?      @map("installed_year")
+  notes         String?
+  archivedAt    DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version       Int       @default(1)
+
+  site             Site              @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  category         EquipmentCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  serviceRequests  ServiceRequest[]
+  bookings         Booking[]
+  workOrders       WorkOrder[]
+  maintenancePlans MaintenancePlan[]
+
+  @@index([customerOrgId, archivedAt])
+  @@index([siteId])
+  @@map("equipment")
+}
+
+// ---------------------------------------------------------------------------
+// Requests, invitations and offers
+// ---------------------------------------------------------------------------
+
+enum RequestKind {
+  DIAGNOSTIC
+  MAINTENANCE
+  BREAKDOWN
+}
+
+enum RequestStatus {
+  DRAFT
+  OPEN
+  BOOKING
+  CLOSED
+  CANCELLED
+}
+
+enum RequestSource {
+  MARKETPLACE
+  BREAKDOWN_ROUTING
+  MAINTENANCE_PLAN
+}
+
+model ServiceRequest {
+  id                  String        @id @default(uuid())
+  reference           String        @unique @default(dbgenerated("('DEM-' || lpad((nextval('request_ref_seq'))::text, 6, '0'))"))
+  customerOrgId       String        @map("customer_org_id")
+  siteId              String        @map("site_id")
+  equipmentId         String        @map("equipment_id")
+  equipmentCategoryId String        @map("equipment_category_id")
+  serviceAreaId       String?       @map("service_area_id")
+  city                String
+  kind                RequestKind
+  status              RequestStatus @default(DRAFT)
+  source              RequestSource @default(MARKETPLACE)
+  title               String
+  symptoms            String
+  /// [{ "start": ISO instant, "end": ISO instant }] — preferred visit windows.
+  preferredWindows    Json          @map("preferred_windows")
+  createdById         String        @map("created_by_id")
+  submittedAt         DateTime?     @map("submitted_at") @db.Timestamptz(3)
+  cancelledAt         DateTime?     @map("cancelled_at") @db.Timestamptz(3)
+  cancelledById       String?       @map("cancelled_by_id")
+  cancelReason        String?       @map("cancel_reason")
+  closedAt            DateTime?     @map("closed_at") @db.Timestamptz(3)
+  maintenancePlanId   String?       @map("maintenance_plan_id")
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version             Int           @default(1)
+
+  site              Site                @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  equipment         Equipment           @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  equipmentCategory EquipmentCategory   @relation(fields: [equipmentCategoryId], references: [id], onDelete: Restrict)
+  serviceArea       ServiceArea?        @relation(fields: [serviceAreaId], references: [id], onDelete: Restrict)
+  invitations       RequestInvitation[]
+  offers            Offer[]
+  bookings          Booking[]
+
+  @@index([customerOrgId, status, createdAt])
+  @@index([status, kind, submittedAt])
+  @@map("service_request")
+}
+
+enum InvitationStatus {
+  INVITED
+  DECLINED
+  OFFERED
+  REVOKED
+  CLOSED
+}
+
+/// Grants an invited provider access to a limited brief of one request.
+model RequestInvitation {
+  id             String           @id @default(uuid())
+  requestId      String           @map("request_id")
+  customerOrgId  String           @map("customer_org_id")
+  providerOrgId  String           @map("provider_org_id")
+  status         InvitationStatus @default(INVITED)
+  invitedById    String           @map("invited_by_id")
+  invitedAsAdmin Boolean          @default(false) @map("invited_as_admin")
+  /// Snapshot of the limited brief: category, city, kind, symptoms, windows, brand/model.
+  brief          Json
+  respondedAt    DateTime?        @map("responded_at") @db.Timestamptz(3)
+  declineReason  String?          @map("decline_reason")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  request        ServiceRequest   @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  offer          Offer?
+
+  @@unique([requestId, providerOrgId])
+  @@index([providerOrgId, status, createdAt])
+  @@map("request_invitation")
+}
+
+enum OfferStatus {
+  OPEN
+  WITHDRAWN
+  SELECTED
+  CLOSED
+}
+
+model Offer {
+  id            String            @id @default(uuid())
+  requestId     String            @map("request_id")
+  invitationId  String            @unique @map("invitation_id")
+  customerOrgId String            @map("customer_org_id")
+  providerOrgId String            @map("provider_org_id")
+  status        OfferStatus       @default(OPEN)
+  createdById   String            @map("created_by_id")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  request       ServiceRequest    @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  invitation    RequestInvitation @relation(fields: [invitationId], references: [id], onDelete: Restrict)
+  versions      OfferVersion[]
+
+  @@index([providerOrgId, status])
+  @@index([requestId])
+  @@map("offer")
+}
+
+enum OfferVersionStatus {
+  DRAFT
+  ISSUED
+  SUPERSEDED
+  WITHDRAWN
+  SELECTED
+  NOT_SELECTED
+  RELEASED
+  EXPIRED
+}
+
+enum OfferKind {
+  DIAGNOSTIC
+  MAINTENANCE
+}
+
+/// Draft versions are editable; issued versions are immutable (enforced by trigger).
+model OfferVersion {
+  id                   String             @id @default(uuid())
+  offerId              String             @map("offer_id")
+  requestId            String             @map("request_id")
+  customerOrgId        String             @map("customer_org_id")
+  providerOrgId        String             @map("provider_org_id")
+  versionNo            Int                @map("version_no")
+  status               OfferVersionStatus @default(DRAFT)
+  kind                 OfferKind
+  scope                String
+  calloutFeeMinor      Int?               @map("callout_fee_minor")
+  /// Diagnostic fee (DIAGNOSTIC) or fixed maintenance price (MAINTENANCE).
+  serviceFeeMinor      Int?               @map("service_fee_minor")
+  /// Tax rate entered by the issuer, in basis points (2000 = 20 %). Never inferred.
+  taxRateBp            Int?               @map("tax_rate_bp")
+  taxNote              String?            @map("tax_note")
+  currency             String             @default("MAD")
+  subtotalMinor        Int                @default(0) @map("subtotal_minor")
+  taxMinor             Int                @default(0) @map("tax_minor")
+  totalMinor           Int                @default(0) @map("total_minor")
+  windowStart          DateTime?          @map("window_start") @db.Timestamptz(3)
+  windowEnd            DateTime?          @map("window_end") @db.Timestamptz(3)
+  estimatedDurationMin Int?               @map("estimated_duration_min")
+  exclusions           String?
+  cancellationTerms    String?            @map("cancellation_terms")
+  warrantyTerms        String?            @map("warranty_terms")
+  expiresAt            DateTime?          @map("expires_at") @db.Timestamptz(3)
+  snapshotHash         String?            @map("snapshot_hash")
+  issuedAt             DateTime?          @map("issued_at") @db.Timestamptz(3)
+  issuedById           String?            @map("issued_by_id")
+  createdById          String             @map("created_by_id")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  offer                Offer              @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  bookings             Booking[]
+
+  @@unique([offerId, versionNo])
+  @@index([requestId, status])
+  @@map("offer_version")
+}
+
+// ---------------------------------------------------------------------------
+// Bookings and work orders
+// ---------------------------------------------------------------------------
+
+enum BookingStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  DECLINED
+  EXPIRED
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+enum PartySide {
+  CUSTOMER
+  PROVIDER
+  PLATFORM
+}
+
+model Booking {
+  id                   String        @id @default(uuid())
+  reference            String        @unique @default(dbgenerated("('RDV-' || lpad((nextval('booking_ref_seq'))::text, 6, '0'))"))
+  requestId            String        @map("request_id")
+  offerId              String        @map("offer_id")
+  offerVersionId       String        @map("offer_version_id")
+  customerOrgId        String        @map("customer_org_id")
+  providerOrgId        String        @map("provider_org_id")
+  siteId               String        @map("site_id")
+  equipmentId          String        @map("equipment_id")
+  kind                 OfferKind
+  status               BookingStatus @default(PENDING_CONFIRMATION)
+  windowStart          DateTime?     @map("window_start") @db.Timestamptz(3)
+  windowEnd            DateTime?     @map("window_end") @db.Timestamptz(3)
+  estimatedDurationMin Int?          @map("estimated_duration_min")
+  confirmationDeadline DateTime      @map("confirmation_deadline") @db.Timestamptz(3)
+  selectedById         String        @map("selected_by_id")
+  technicianId         String?       @map("technician_id")
+  technicianName       String?       @map("technician_name")
+  scheduledStart       DateTime?     @map("scheduled_start") @db.Timestamptz(3)
+  scheduledEnd         DateTime?     @map("scheduled_end") @db.Timestamptz(3)
+  confirmedAt          DateTime?     @map("confirmed_at") @db.Timestamptz(3)
+  confirmedById        String?       @map("confirmed_by_id")
+  declinedAt           DateTime?     @map("declined_at") @db.Timestamptz(3)
+  declineReason        String?       @map("decline_reason")
+  cancelledAt          DateTime?     @map("cancelled_at") @db.Timestamptz(3)
+  cancelledById        String?       @map("cancelled_by_id")
+  cancelledBySide      PartySide?    @map("cancelled_by_side")
+  cancelReason         String?       @map("cancel_reason")
+  noShowAt             DateTime?     @map("no_show_at") @db.Timestamptz(3)
+  /// The party that did not attend.
+  noShowSide           PartySide?    @map("no_show_side")
+  noShowReportedById   String?       @map("no_show_reported_by_id")
+  noShowNote           String?       @map("no_show_note")
+  completedAt          DateTime?     @map("completed_at") @db.Timestamptz(3)
+  lockVersion          Int           @default(0) @map("lock_version")
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  request      ServiceRequest           @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  offerVersion OfferVersion             @relation(fields: [offerVersionId], references: [id], onDelete: Restrict)
+  site         Site                     @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  equipment    Equipment                @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  workOrder    WorkOrder?
+  reservations AppointmentReservation[]
+  events       JobEvent[]
+  reschedules  RescheduleProposal[]
+  payments     PaymentRecord[]
+  review       Review?
+
+  @@index([customerOrgId, status, createdAt])
+  @@index([providerOrgId, status, createdAt])
+  @@index([technicianId, scheduledStart])
+  @@index([requestId])
+  @@map("booking")
+}
+
+enum RescheduleStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model RescheduleProposal {
+  id             String           @id @default(uuid())
+  bookingId      String           @map("booking_id")
+  customerOrgId  String           @map("customer_org_id")
+  providerOrgId  String           @map("provider_org_id")
+  proposedBySide PartySide        @map("proposed_by_side")
+  proposedById   String           @map("proposed_by_id")
+  startsAt       DateTime         @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime         @map("ends_at") @db.Timestamptz(3)
+  technicianId   String?          @map("technician_id")
+  technicianName String?          @map("technician_name")
+  reason         String
+  status         RescheduleStatus @default(PENDING)
+  respondedById  String?          @map("responded_by_id")
+  respondedAt    DateTime?        @map("responded_at") @db.Timestamptz(3)
+  responseNote   String?          @map("response_note")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  booking        Booking          @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, status])
+  @@map("reschedule_proposal")
+}
+
+enum WorkOrderStatus {
+  SCHEDULED
+  EN_ROUTE
+  ON_SITE
+  AWAITING_APPROVAL
+  DIAGNOSED
+  AWAITING_PARTS
+  IN_PROGRESS
+  REPORT_SUBMITTED
+  CANCELLED
+}
+
+enum AckStatus {
+  PENDING
+  ACKNOWLEDGED
+  DISPUTED
+}
+
+model WorkOrder {
+  id                         String          @id @default(uuid())
+  reference                  String          @unique @default(dbgenerated("('INT-' || lpad((nextval('work_order_ref_seq'))::text, 6, '0'))"))
+  bookingId                  String          @unique @map("booking_id")
+  customerOrgId              String          @map("customer_org_id")
+  providerOrgId              String          @map("provider_org_id")
+  technicianId               String          @map("technician_id")
+  siteId                     String          @map("site_id")
+  equipmentId                String          @map("equipment_id")
+  kind                       OfferKind
+  status                     WorkOrderStatus @default(SCHEDULED)
+  /// True when the accepted offer is a precisely defined maintenance scope.
+  maintenanceScopeAuthorized Boolean         @default(false) @map("maintenance_scope_authorized")
+  /// Customer acknowledgment of the submitted report; null until a report exists.
+  acknowledgment             AckStatus?
+  acknowledgedAt             DateTime?       @map("acknowledged_at") @db.Timestamptz(3)
+  acknowledgedById           String?         @map("acknowledged_by_id")
+  completedAt                DateTime?       @map("completed_at") @db.Timestamptz(3)
+  lockVersion                Int             @default(0) @map("lock_version")
+  createdAt                  DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                  DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  booking      Booking         @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  equipment    Equipment       @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  site         Site            @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  events       JobEvent[]
+  notes        WorkOrderNote[]
+  repairQuotes RepairQuote[]
+  report       ServiceReport?
+  disputes     Dispute[]
+
+  @@index([customerOrgId, status])
+  @@index([providerOrgId, status])
+  @@index([technicianId, status])
+  @@index([equipmentId])
+  @@map("work_order")
+}
+
+enum JobEventType {
+  BOOKING_REQUESTED
+  BOOKING_CONFIRMED
+  BOOKING_DECLINED
+  BOOKING_EXPIRED
+  BOOKING_CANCELLED
+  NO_SHOW_REPORTED
+  RESCHEDULE_PROPOSED
+  RESCHEDULE_ACCEPTED
+  RESCHEDULE_REJECTED
+  EN_ROUTE
+  ON_SITE
+  REPAIR_QUOTE_ISSUED
+  REPAIR_QUOTE_APPROVED
+  REPAIR_QUOTE_REJECTED
+  REPAIR_QUOTE_WITHDRAWN
+  WORK_STARTED
+  AWAITING_PARTS
+  REPORT_SUBMITTED
+  ACKNOWLEDGED
+  DISPUTE_OPENED
+  DISPUTE_UPDATED
+  DISPUTE_RESOLVED
+  PAYMENT_REPORTED
+  PAYMENT_CONFIRMED
+  PAYMENT_REJECTED
+  PAYMENT_REVERSED
+}
+
+/// Append-only timeline. The runtime role has no UPDATE/DELETE privilege on this table.
+model JobEvent {
+  id            String       @id @default(uuid())
+  bookingId     String       @map("booking_id")
+  workOrderId   String?      @map("work_order_id")
+  customerOrgId String       @map("customer_org_id")
+  providerOrgId String       @map("provider_org_id")
+  type          JobEventType
+  fromStatus    String?      @map("from_status")
+  toStatus      String?      @map("to_status")
+  actorUserId   String?      @map("actor_user_id")
+  actorOrgId    String?      @map("actor_org_id")
+  actorSide     PartySide?   @map("actor_side")
+  actorName     String?      @map("actor_name")
+  note          String?
+  metadata      Json?
+  occurredAt    DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  booking       Booking      @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  workOrder     WorkOrder?   @relation(fields: [workOrderId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, occurredAt])
+  @@index([workOrderId, occurredAt])
+  @@map("job_event")
+}
+
+enum NoteVisibility {
+  SHARED
+  PROVIDER_INTERNAL
+  CUSTOMER_PRIVATE
+}
+
+model WorkOrderNote {
+  id            String         @id @default(uuid())
+  workOrderId   String         @map("work_order_id")
+  customerOrgId String         @map("customer_org_id")
+  providerOrgId String         @map("provider_org_id")
+  authorUserId  String         @map("author_user_id")
+  authorOrgId   String         @map("author_org_id")
+  authorName    String         @map("author_name")
+  visibility    NoteVisibility
+  body          String
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  workOrder     WorkOrder      @relation(fields: [workOrderId], references: [id], onDelete: Restrict)
+
+  @@index([workOrderId, createdAt])
+  @@map("work_order_note")
+}
+
+// ---------------------------------------------------------------------------
+// Repair quotes and approvals
+// ---------------------------------------------------------------------------
+
+model RepairQuote {
+  id            String               @id @default(uuid())
+  workOrderId   String               @map("work_order_id")
+  customerOrgId String               @map("customer_org_id")
+  providerOrgId String               @map("provider_org_id")
+  /// 1 = initial repair scope, 2+ = change orders for additional work.
+  sequenceNo    Int                  @map("sequence_no")
+  title         String
+  createdById   String               @map("created_by_id")
+  createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  workOrder     WorkOrder            @relation(fields: [workOrderId], references: [id], onDelete: Restrict)
+  versions      RepairQuoteVersion[]
+
+  @@unique([workOrderId, sequenceNo])
+  @@map("repair_quote")
+}
+
+enum QuoteVersionStatus {
+  DRAFT
+  ISSUED
+  SUPERSEDED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model RepairQuoteVersion {
+  id                   String             @id @default(uuid())
+  repairQuoteId        String             @map("repair_quote_id")
+  workOrderId          String             @map("work_order_id")
+  customerOrgId        String             @map("customer_org_id")
+  providerOrgId        String             @map("provider_org_id")
+  versionNo            Int                @map("version_no")
+  status               QuoteVersionStatus @default(DRAFT)
+  scopeSummary         String             @map("scope_summary")
+  estimatedDurationMin Int?               @map("estimated_duration_min")
+  timingNote           String?            @map("timing_note")
+  exclusions           String?
+  warrantyTerms        String?            @map("warranty_terms")
+  validUntil           DateTime?          @map("valid_until") @db.Timestamptz(3)
+  revisionReason       String?            @map("revision_reason")
+  currency             String             @default("MAD")
+  subtotalMinor        Int                @default(0) @map("subtotal_minor")
+  taxMinor             Int                @default(0) @map("tax_minor")
+  totalMinor           Int                @default(0) @map("total_minor")
+  snapshotHash         String?            @map("snapshot_hash")
+  issuedAt             DateTime?          @map("issued_at") @db.Timestamptz(3)
+  issuedById           String?            @map("issued_by_id")
+  createdById          String             @map("created_by_id")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  repairQuote          RepairQuote        @relation(fields: [repairQuoteId], references: [id], onDelete: Restrict)
+  lines                QuoteLineItem[]
+  approval             Approval?
+
+  @@unique([repairQuoteId, versionNo])
+  @@index([workOrderId, status])
+  @@map("repair_quote_version")
+}
+
+enum LineKind {
+  PART
+  LABOR
+  TRAVEL
+  OTHER
+}
+
+model QuoteLineItem {
+  id             String             @id @default(uuid())
+  versionId      String             @map("version_id")
+  customerOrgId  String             @map("customer_org_id")
+  providerOrgId  String             @map("provider_org_id")
+  position       Int
+  kind           LineKind
+  description    String
+  /// Quantity in thousandths (1.5 h = 1500).
+  quantityMilli  Int                @map("quantity_milli")
+  unitPriceMinor Int                @map("unit_price_minor")
+  taxRateBp      Int                @map("tax_rate_bp")
+  subtotalMinor  Int                @map("subtotal_minor")
+  taxMinor       Int                @map("tax_minor")
+  totalMinor     Int                @map("total_minor")
+  version        RepairQuoteVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, position])
+  @@map("quote_line_item")
+}
+
+enum ApprovalDecision {
+  APPROVED
+  REJECTED
+}
+
+/// One decision per issued version. Stores the exact amount and a SHA-256 hash of the
+/// canonical quote snapshot the customer decided on.
+model Approval {
+  id            String             @id @default(uuid())
+  versionId     String             @unique @map("version_id")
+  repairQuoteId String             @map("repair_quote_id")
+  workOrderId   String             @map("work_order_id")
+  customerOrgId String             @map("customer_org_id")
+  providerOrgId String             @map("provider_org_id")
+  decision      ApprovalDecision
+  actorUserId   String             @map("actor_user_id")
+  actorOrgId    String             @map("actor_org_id")
+  decidedAt     DateTime           @default(now()) @map("decided_at") @db.Timestamptz(3)
+  amountMinor   Int                @map("amount_minor")
+  currency      String
+  snapshotHash  String             @map("snapshot_hash")
+  reason        String?
+  version       RepairQuoteVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@index([workOrderId])
+  @@map("approval")
+}
+
+// ---------------------------------------------------------------------------
+// Reports and documents
+// ---------------------------------------------------------------------------
+
+model ServiceReport {
+  id                 String    @id @default(uuid())
+  workOrderId        String    @unique @map("work_order_id")
+  customerOrgId      String    @map("customer_org_id")
+  providerOrgId      String    @map("provider_org_id")
+  findings           String
+  workPerformed      String    @map("work_performed")
+  partsUsed          String?   @map("parts_used")
+  recommendations    String?
+  nextServiceDate    DateTime? @map("next_service_date") @db.Date
+  /// Approved repair-quote versions covered by this report (snapshot).
+  approvedVersionIds String[]  @map("approved_version_ids")
+  repairDeclined     Boolean   @default(false) @map("repair_declined")
+  submittedById      String    @map("submitted_by_id")
+  submittedByName    String    @map("submitted_by_name")
+  submittedAt        DateTime  @default(now()) @map("submitted_at") @db.Timestamptz(3)
+  snapshotHash       String    @map("snapshot_hash")
+  workOrder          WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Restrict)
+
+  @@map("service_report")
+}
+
+enum DocumentKind {
+  PHOTO
+  ATTACHMENT
+  REPORT_PDF
+  QUOTE_PDF
+  PAYMENT_EVIDENCE
+}
+
+enum DocumentVisibility {
+  OWNER_ONLY
+  SHARED_PARTIES
+  QUOTING_SHARED
+}
+
+enum DocumentStatus {
+  PENDING
+  READY
+  FAILED
+  DELETED
+}
+
+model Document {
+  id                   String             @id @default(uuid())
+  ownerOrgId           String             @map("owner_org_id")
+  uploadedById         String?            @map("uploaded_by_id")
+  customerOrgId        String?            @map("customer_org_id")
+  providerOrgId        String?            @map("provider_org_id")
+  requestId            String?            @map("request_id")
+  workOrderId          String?            @map("work_order_id")
+  reportId             String?            @map("report_id")
+  equipmentId          String?            @map("equipment_id")
+  paymentId            String?            @map("payment_id")
+  repairQuoteVersionId String?            @map("repair_quote_version_id")
+  kind                 DocumentKind
+  visibility           DocumentVisibility
+  status               DocumentStatus     @default(PENDING)
+  storageKey           String             @unique @map("storage_key")
+  originalName         String             @map("original_name")
+  mimeType             String?            @map("mime_type")
+  sizeBytes            Int?               @map("size_bytes")
+  sha256               String?
+  failureReason        String?            @map("failure_reason")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  finalizedAt          DateTime?          @map("finalized_at") @db.Timestamptz(3)
+  deletedAt            DateTime?          @map("deleted_at") @db.Timestamptz(3)
+
+  @@index([ownerOrgId, status, createdAt])
+  @@index([requestId])
+  @@index([workOrderId])
+  @@index([status, createdAt])
+  @@map("document")
+}
+
+// ---------------------------------------------------------------------------
+// Payments (records of direct customer -> provider payments; no platform funds)
+// ---------------------------------------------------------------------------
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+  OTHER_EXTERNAL
+}
+
+enum PaymentStatus {
+  REPORTED
+  CONFIRMED
+  REJECTED
+  REVERSED
+}
+
+model PaymentRecord {
+  id                 String         @id @default(uuid())
+  bookingId          String         @map("booking_id")
+  customerOrgId      String         @map("customer_org_id")
+  providerOrgId      String         @map("provider_org_id")
+  amountMinor        Int            @map("amount_minor")
+  currency           String         @default("MAD")
+  method             PaymentMethod
+  paidOn             DateTime       @map("paid_on") @db.Date
+  externalReference  String?        @map("external_reference")
+  note               String?
+  status             PaymentStatus
+  reportedSide       PartySide      @map("reported_side")
+  reportedById       String         @map("reported_by_id")
+  reportedByOrgId    String         @map("reported_by_org_id")
+  confirmedById      String?        @map("confirmed_by_id")
+  confirmedAt        DateTime?      @map("confirmed_at") @db.Timestamptz(3)
+  rejectedById       String?        @map("rejected_by_id")
+  rejectedAt         DateTime?      @map("rejected_at") @db.Timestamptz(3)
+  rejectionReason    String?        @map("rejection_reason")
+  reversedById       String?        @map("reversed_by_id")
+  reversedAt         DateTime?      @map("reversed_at") @db.Timestamptz(3)
+  reversalReason     String?        @map("reversal_reason")
+  evidenceDocumentId String?        @map("evidence_document_id")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  booking            Booking        @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  events             PaymentEvent[]
+
+  @@index([bookingId, status])
+  @@index([providerOrgId, status])
+  @@index([customerOrgId, status])
+  @@map("payment_record")
+}
+
+enum PaymentEventType {
+  REPORTED
+  RECORDED_BY_PAYEE
+  CONFIRMED
+  REJECTED
+  REVERSED
+  ADMIN_CORRECTION
+}
+
+model PaymentEvent {
+  id            String           @id @default(uuid())
+  paymentId     String           @map("payment_id")
+  bookingId     String           @map("booking_id")
+  customerOrgId String           @map("customer_org_id")
+  providerOrgId String           @map("provider_org_id")
+  type          PaymentEventType
+  actorUserId   String           @map("actor_user_id")
+  actorOrgId    String           @map("actor_org_id")
+  reason        String?
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  payment       PaymentRecord    @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId, createdAt])
+  @@map("payment_event")
+}
+
+// ---------------------------------------------------------------------------
+// Maintenance plans
+// ---------------------------------------------------------------------------
+
+enum PlanStatus {
+  PROPOSED
+  ACTIVE
+  PAUSED
+  ENDED
+  DECLINED
+}
+
+model MaintenancePlan {
+  id               String                  @id @default(uuid())
+  customerOrgId    String                  @map("customer_org_id")
+  providerOrgId    String                  @map("provider_org_id")
+  equipmentId      String                  @map("equipment_id")
+  siteId           String                  @map("site_id")
+  title            String
+  scope            String
+  /// Provider-entered recurrence. The software never invents intervals.
+  intervalMonths   Int                     @map("interval_months")
+  reminderLeadDays Int                     @default(14) @map("reminder_lead_days")
+  firstDueDate     DateTime                @map("first_due_date") @db.Date
+  nextDueDate      DateTime?               @map("next_due_date") @db.Date
+  status           PlanStatus              @default(PROPOSED)
+  proposedById     String                  @map("proposed_by_id")
+  consentedById    String?                 @map("consented_by_id")
+  consentedAt      DateTime?               @map("consented_at") @db.Timestamptz(3)
+  statusNote       String?                 @map("status_note")
+  createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  equipment        Equipment               @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  occurrences      MaintenanceOccurrence[]
+
+  @@index([status, nextDueDate])
+  @@index([customerOrgId])
+  @@index([providerOrgId])
+  @@map("maintenance_plan")
+}
+
+enum OccurrenceStatus {
+  DRAFT_CREATED
+  DISMISSED
+}
+
+model MaintenanceOccurrence {
+  id             String           @id @default(uuid())
+  planId         String           @map("plan_id")
+  customerOrgId  String           @map("customer_org_id")
+  providerOrgId  String           @map("provider_org_id")
+  dueDate        DateTime         @map("due_date") @db.Date
+  /// "<plan id>:<YYYY-MM-DD>" — makes reminder generation idempotent under retries.
+  occurrenceKey  String           @unique @map("occurrence_key")
+  status         OccurrenceStatus @default(DRAFT_CREATED)
+  draftRequestId String?          @map("draft_request_id")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  plan           MaintenancePlan  @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([planId, dueDate])
+  @@map("maintenance_occurrence")
+}
+
+// ---------------------------------------------------------------------------
+// Reviews and disputes
+// ---------------------------------------------------------------------------
+
+enum ReviewStatus {
+  PENDING_MODERATION
+  PUBLISHED
+  REJECTED
+}
+
+model Review {
+  id             String          @id @default(uuid())
+  bookingId      String          @unique @map("booking_id")
+  customerOrgId  String          @map("customer_org_id")
+  providerOrgId  String          @map("provider_org_id")
+  authorUserId   String          @map("author_user_id")
+  rating         Int
+  comment        String?
+  status         ReviewStatus    @default(PENDING_MODERATION)
+  moderatedById  String?         @map("moderated_by_id")
+  moderatedAt    DateTime?       @map("moderated_at") @db.Timestamptz(3)
+  moderationNote String?         @map("moderation_note")
+  isDemo         Boolean         @default(false) @map("is_demo")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  booking        Booking         @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  response       ReviewResponse?
+
+  @@index([providerOrgId, status])
+  @@map("review")
+}
+
+model ReviewResponse {
+  id            String   @id @default(uuid())
+  reviewId      String   @unique @map("review_id")
+  providerOrgId String   @map("provider_org_id")
+  customerOrgId String   @map("customer_org_id")
+  authorUserId  String   @map("author_user_id")
+  body          String
+  hidden        Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  review        Review   @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+
+  @@map("review_response")
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  WITHDRAWN
+}
+
+model Dispute {
+  id                String         @id @default(uuid())
+  workOrderId       String         @map("work_order_id")
+  bookingId         String         @map("booking_id")
+  customerOrgId     String         @map("customer_org_id")
+  providerOrgId     String         @map("provider_org_id")
+  openedById        String         @map("opened_by_id")
+  reason            String
+  status            DisputeStatus  @default(OPEN)
+  resolutionSummary String?        @map("resolution_summary")
+  resolvedById      String?        @map("resolved_by_id")
+  resolvedAt        DateTime?      @map("resolved_at") @db.Timestamptz(3)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  workOrder         WorkOrder      @relation(fields: [workOrderId], references: [id], onDelete: Restrict)
+  events            DisputeEvent[]
+
+  @@index([status, createdAt])
+  @@index([workOrderId])
+  @@map("dispute")
+}
+
+enum DisputeEventType {
+  OPENED
+  COMMENT
+  STATUS_CHANGED
+  RESOLVED
+  WITHDRAWN
+}
+
+model DisputeEvent {
+  id            String           @id @default(uuid())
+  disputeId     String           @map("dispute_id")
+  customerOrgId String           @map("customer_org_id")
+  providerOrgId String           @map("provider_org_id")
+  actorUserId   String           @map("actor_user_id")
+  actorOrgId    String           @map("actor_org_id")
+  actorSide     PartySide        @map("actor_side")
+  actorName     String           @map("actor_name")
+  type          DisputeEventType
+  body          String?
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  dispute       Dispute          @relation(fields: [disputeId], references: [id], onDelete: Restrict)
+
+  @@index([disputeId, createdAt])
+  @@map("dispute_event")
+}
+
+// ---------------------------------------------------------------------------
+// Provider software subscriptions (manually recorded in the pilot)
+// ---------------------------------------------------------------------------
+
+model SubscriptionPlan {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  name       String
+  priceMinor Int      @map("price_minor")
+  currency   String   @default("MAD")
+  period     String   @default("MONTH")
+  maxStaff   Int      @map("max_staff")
+  taxNote    String   @map("tax_note")
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  subscriptions ProviderSubscription[]
+
+  @@map("subscription_plan")
+}
+
+model ProviderSubscription {
+  id            String              @id @default(uuid())
+  providerOrgId String              @unique @map("provider_org_id")
+  planId        String              @map("plan_id")
+  /// Last day (inclusive, Africa/Casablanca) covered by a recorded period.
+  paidUntil     DateTime?           @map("paid_until") @db.Date
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  plan          SubscriptionPlan    @relation(fields: [planId], references: [id], onDelete: Restrict)
+  events        SubscriptionEvent[]
+
+  @@map("provider_subscription")
+}
+
+enum SubscriptionEventType {
+  PERIOD_RECORDED
+  PLAN_ASSIGNED
+  CORRECTION
+}
+
+model SubscriptionEvent {
+  id             String                @id @default(uuid())
+  subscriptionId String                @map("subscription_id")
+  providerOrgId  String                @map("provider_org_id")
+  type           SubscriptionEventType
+  periodStart    DateTime?             @map("period_start") @db.Date
+  periodEnd      DateTime?             @map("period_end") @db.Date
+  amountMinor    Int?                  @map("amount_minor")
+  currency       String?
+  reference      String?
+  reason         String
+  actorUserId    String                @map("actor_user_id")
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  subscription   ProviderSubscription  @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  @@index([providerOrgId, createdAt])
+  @@map("subscription_event")
+}
+
+// ---------------------------------------------------------------------------
+// Customer-initiated provider referrals and public support messages
+// ---------------------------------------------------------------------------
+
+model ProviderReferral {
+  id            String   @id @default(uuid())
+  customerOrgId String   @map("customer_org_id")
+  invitedById   String   @map("invited_by_id")
+  email         String
+  companyName   String   @map("company_name")
+  message       String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([customerOrgId, createdAt])
+  @@map("provider_referral")
+}
+
+model SupportMessage {
+  id               String   @id @default(uuid())
+  name             String
+  email            String
+  organizationName String?  @map("organization_name")
+  topic            String
+  message          String
+  userId           String?  @map("user_id")
+  handled          Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([handled, createdAt])
+  @@map("support_message")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications, outbox, email, audit, idempotency
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  organizationId String    @map("organization_id")
+  type           String
+  title          String
+  body           String
+  link           String?
+  eventId        String?   @map("event_id")
+  readAt         DateTime? @map("read_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([eventId, userId])
+  @@index([userId, organizationId, readAt, createdAt])
+  @@map("notification")
+}
+
+enum QueueStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+  DEAD
+}
+
+/// Transactional outbox: written in the same transaction as the domain change and
+/// processed at-least-once by the worker. Payloads carry identifiers only.
+model OutboxEvent {
+  id            String      @id @default(uuid())
+  type          String
+  aggregateType String      @map("aggregate_type")
+  aggregateId   String      @map("aggregate_id")
+  payload       Json
+  actorUserId   String?     @map("actor_user_id")
+  actorOrgId    String?     @map("actor_org_id")
+  status        QueueStatus @default(PENDING)
+  attempts      Int         @default(0)
+  maxAttempts   Int         @default(8) @map("max_attempts")
+  availableAt   DateTime    @default(now()) @map("available_at") @db.Timestamptz(3)
+  lockedAt      DateTime?   @map("locked_at") @db.Timestamptz(3)
+  lockedBy      String?     @map("locked_by")
+  lastError     String?     @map("last_error")
+  processedAt   DateTime?   @map("processed_at") @db.Timestamptz(3)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([status, availableAt])
+  @@map("outbox_event")
+}
+
+model EmailDelivery {
+  id          String      @id @default(uuid())
+  dedupeKey   String      @unique @map("dedupe_key")
+  category    String
+  toEmail     String      @map("to_email")
+  subject     String
+  /// Cleared after successful delivery (may contain one-time links).
+  textBody    String      @map("text_body")
+  status      QueueStatus @default(PENDING)
+  attempts    Int         @default(0)
+  maxAttempts Int         @default(6) @map("max_attempts")
+  availableAt DateTime    @default(now()) @map("available_at") @db.Timestamptz(3)
+  lockedAt    DateTime?   @map("locked_at") @db.Timestamptz(3)
+  lockedBy    String?     @map("locked_by")
+  lastError   String?     @map("last_error")
+  sentAt      DateTime?   @map("sent_at") @db.Timestamptz(3)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([status, availableAt])
+  @@map("email_delivery")
+}
+
+/// Append-only audit trail (runtime roles may INSERT only; admins may read).
+model AuditEvent {
+  id          String   @id @default(uuid())
+  actorUserId String?  @map("actor_user_id")
+  actorOrgId  String?  @map("actor_org_id")
+  actorRole   String?  @map("actor_role")
+  action      String
+  targetType  String   @map("target_type")
+  targetId    String?  @map("target_id")
+  reason      String?
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([actorOrgId, createdAt])
+  @@map("audit_event")
+}
+
+model IdempotencyRecord {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  operation      String
+  key            String
+  requestHash    String   @map("request_hash")
+  responseStatus Int      @map("response_status")
+  responseBody   Json     @map("response_body")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([organizationId, operation, key])
+  @@map("idempotency_record")
+}
