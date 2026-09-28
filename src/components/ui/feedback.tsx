@@ -14,11 +14,12 @@ const badgeTones: Record<Tone, string> = {
 };
 
 /** Status is never conveyed by colour alone: every badge carries text (and optionally an icon). */
-export function Badge({ tone = "neutral", icon: Icon, children, className }: { tone?: Tone; icon?: LucideIcon; children: ReactNode; className?: string }) {
+/** Status label with text (never colour alone). `wrap` lets long labels break instead of truncating. */
+export function Badge({ tone = "neutral", icon: Icon, children, className, wrap = false }: { tone?: Tone; icon?: LucideIcon; children: ReactNode; className?: string; wrap?: boolean }) {
   return (
-    <span className={cn("inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold", badgeTones[tone], className)}>
+    <span className={cn("inline-flex max-w-full items-center gap-1 border px-2.5 py-0.5 text-xs font-semibold", wrap ? "rounded-lg" : "rounded-full", badgeTones[tone], className)}>
       {Icon ? <Icon aria-hidden className="size-3.5 shrink-0" /> : null}
-      <span className="truncate">{children}</span>
+      <span className={wrap ? "min-w-0 break-words" : "truncate"}>{children}</span>
     </span>
   );
 }

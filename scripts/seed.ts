@@ -132,6 +132,8 @@ async function providerProfile(
         reason: "Période de démonstration — aucun paiement réel.",
       });
     });
+    // Demonstration checks are flagged so that public pages label them as such.
+    await db.providerCheck.updateMany({ where: { providerProfileId: profile.id }, data: { isDemo: true } });
   }
   return profile.id;
 }
@@ -354,7 +356,7 @@ async function main() {
     console.log(`[seed] ${file}: données de démonstration prêtes. Mot de passe commun : ${process.env.DEMO_PASSWORD ? "(DEMO_PASSWORD)" : password}`);
     console.log(
       [
-        "  admin@", "client@ (propriétaire client)", "responsable@ (responsable client)", "lecteur@ (lecteur client)", "restaurant@ (2e client)",
+        "admin@ (administrateur)", "client@ (propriétaire client)", "responsable@ (responsable client)", "lecteur@ (lecteur client)", "restaurant@ (2e client)",
         "prestataire@ (propriétaire prestataire)", "planificateur@", "technicien@", "prestataire2@", "technicien2@", "prestataire3@ (profil à vérifier)",
       ]
         .map((s) => `  - ${s.replace("@", `@${DOMAIN}`)}`)

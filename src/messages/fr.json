@@ -990,7 +990,7 @@
       "expired": "Offre expirée",
       "notProvided": "Non précisé",
       "pendingNote": "Le rendez-vous n'est confirmé qu'après acceptation par le prestataire, qui assigne un technicien et un créneau précis.",
-      "repairAfterDiagnosis": "Non inclus : un devis de réparation distinct vous sera soumis après diagnostic, pour approbation.",
+      "repairAfterDiagnosis": "Devis de réparation après diagnostic : non inclus dans ce prix, il vous sera soumis séparément pour approbation.",
       "repairNotIncluded": "Seul le périmètre décrit est inclus ; toute réparation supplémentaire fera l'objet d'un devis à approuver.",
       "revised": "Révisée ({n} version(s) précédente(s))",
       "rows": {
@@ -1790,7 +1790,7 @@
     "noUpcoming": "Aucune intervention à venir.",
     "recent": "Récemment terminées",
     "title": "Mes interventions",
-    "today": "Aujourd'hui",
+    "today": "Aujourd'hui et en cours",
     "upcoming": "À venir"
   },
   "technicians": {

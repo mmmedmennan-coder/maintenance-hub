@@ -81,7 +81,7 @@ function ProviderHead({ o }: { o: ComparableOffer }) {
       </p>
       {o.verifiedChecks.length ? (
         <p className="flex flex-wrap gap-1">
-          {o.verifiedChecks.map((c) => <Badge key={c} tone="success" icon={BadgeCheck}>{te("enums.checkType", c)}</Badge>)}
+          {o.verifiedChecks.map((c) => <Badge key={c} tone="success" icon={BadgeCheck} wrap>{te("enums.checkType", c)}</Badge>)}
         </p>
       ) : null}
       <p className="text-xs text-muted">

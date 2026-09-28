@@ -107,7 +107,7 @@ export default async function DirectoryPage({ searchParams }: { searchParams: Pr
           </EmptyState>
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {results.items.map((p) => (
             <ProviderCard key={p.id} p={p} />
           ))}

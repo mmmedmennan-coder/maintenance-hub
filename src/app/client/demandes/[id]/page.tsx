@@ -154,6 +154,14 @@ export default async function RequestDetailPage({ params, searchParams }: { para
         </Alert>
       ) : null}
 
+      {comparable.length > 0 ? (
+        // Offers get the full width so that providers can be compared side by side.
+        <section id="offres" className="mb-6 space-y-3">
+          <h2 className="text-lg font-semibold text-ink">{t("customer.requestDetail.offersTitle")}</h2>
+          <OfferComparison offers={comparable} canSelect={writer && request.status === "OPEN"} requestReference={request.reference} />
+        </section>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="min-w-0 space-y-6">
           {request.status !== "DRAFT" && request.kind !== "BREAKDOWN" && request.status === "OPEN" && writer ? (
@@ -172,16 +180,14 @@ export default async function RequestDetailPage({ params, searchParams }: { para
             </Card>
           ) : null}
 
-          <section id="offres" className="space-y-3">
-            <h2 className="text-lg font-semibold text-ink">{t("customer.requestDetail.offersTitle")}</h2>
-            {comparable.length === 0 ? (
+          {comparable.length === 0 ? (
+            <section id="offres" className="space-y-3">
+              <h2 className="text-lg font-semibold text-ink">{t("customer.requestDetail.offersTitle")}</h2>
               <p className="rounded-lg border border-dashed border-line-strong bg-surface p-4 text-sm text-muted">
                 {request.status === "DRAFT" ? t("customer.requestDetail.offersAfterSubmit") : t("customer.requestDetail.noOffers")}
               </p>
-            ) : (
-              <OfferComparison offers={comparable} canSelect={writer && request.status === "OPEN"} requestReference={request.reference} />
-            )}
-          </section>
+            </section>
+          ) : null}
 
           <Card>
             <CardHeader title={t("customer.requestDetail.invitationsTitle")} />

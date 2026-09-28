@@ -1,0 +1,40 @@
+# Local development services only: PostgreSQL and Mailpit (e-mail capture).
+# The web app and the worker run with npm on the host (see README.md).
+#
+#   docker compose up -d
+#
+# Ports are bound to 127.0.0.1. Change the superuser password in .env (POSTGRES_SUPERUSER_PASSWORD)
+# and keep POSTGRES_SUPERUSER_URL consistent with it.
+name: maintenance-hub
+
+services:
+  postgres:
+    image: postgres:16.13-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-change-me-superuser}
+      POSTGRES_DB: postgres
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 2000
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+
+volumes:
+  pgdata:

@@ -30,7 +30,7 @@ export function RatingLine({ avg, count }: { avg: number | null; count: number }
 export function ProviderCard({ p }: { p: ProviderCardData }) {
   const extra = p.categories.length - 3;
   return (
-    <article className="flex flex-col rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
+    <article className="flex min-w-0 flex-col rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink">
           <Link href={`/prestataires/${p.slug}`} className="hover:underline">
@@ -47,7 +47,7 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
       <p className="mt-3 text-sm text-ink-soft">{p.summary}</p>
       <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={t("provider.categories")}>
         {p.categories.slice(0, 3).map((c) => (
-          <li key={c}>
+          <li key={c} className="max-w-full">
             <Badge>{c}</Badge>
           </li>
         ))}
@@ -60,8 +60,8 @@ export function ProviderCard({ p }: { p: ProviderCardData }) {
       {p.verifiedChecks.length ? (
         <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={t("provider.checks")}>
           {p.verifiedChecks.map((c) => (
-            <li key={c.type}>
-              <Badge tone="success" icon={BadgeCheck}>
+            <li key={c.type} className="max-w-full">
+              <Badge tone="success" icon={BadgeCheck} wrap>
                 {te("enums.checkType", c.type)}
                 {c.isDemo ? ` (${t("app.demoBadge").toLowerCase()})` : ""}
               </Badge>
