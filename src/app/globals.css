@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — calm professional palette: warm white surfaces, deep navy text,
+ * teal actions, restrained amber warnings. All text/background pairs meet WCAG AA.
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+
+  --color-canvas: #faf8f4;
+  --color-surface: #ffffff;
+  --color-subtle: #f4f1ea;
+  --color-line: #e5e0d5;
+  --color-line-strong: #cbc3b1;
+
+  --color-ink: #13233f;
+  --color-ink-soft: #33415a;
+  --color-muted: #566174;
+
+  --color-brand: #0e7c73;
+  --color-brand-strong: #0a625b;
+  --color-brand-soft: #e3f3f0;
+  --color-brand-ink: #0a4f49;
+
+  --color-warn: #7f4b00;
+  --color-warn-soft: #fff4dc;
+  --color-warn-line: #efd29a;
+
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-danger-line: #f3c1bb;
+
+  --color-success: #1d6f43;
+  --color-success-soft: #e5f3ea;
+  --color-success-line: #b9dcc6;
+
+  --color-info: #1d5499;
+  --color-info-soft: #e9f0fb;
+  --color-info-line: #bdd0ee;
+
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(19 35 63 / 0.05), 0 1px 3px rgb(19 35 63 / 0.06);
+  --shadow-pop: 0 10px 30px rgb(19 35 63 / 0.16);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--color-brand-soft);
+}
+
+dialog::backdrop {
+  background: rgb(19 35 63 / 0.45);
+}
+
+dialog[open] {
+  animation: dialog-in 140ms ease-out;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.prose-plain {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

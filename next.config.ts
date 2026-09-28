@@ -21,6 +21,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Do not generate AGENTS.md / CLAUDE.md files in the repository.
+  agentRules: false,
   poweredByHeader: false,
   serverExternalPackages: ["pdfkit", "pg", "@aws-sdk/client-s3"],
   async headers() {

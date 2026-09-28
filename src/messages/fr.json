@@ -477,5 +477,418 @@
       "validUntil": "Valable jusqu'au",
       "disclaimer": "Taux de taxe saisis par le prestataire. Ce document n'est pas une facture. Tout travail supplémentaire nécessite un nouveau devis approuvé."
     }
+  },
+  "common": {
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "loading": "Chargement…",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pagination": "Pagination",
+    "pageOf": "Page {page} sur {pages} · {total} résultat(s)",
+    "reasonRequired": "Indiquez un motif (3 caractères minimum).",
+    "edit": "Modifier",
+    "create": "Créer",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "delete": "Supprimer",
+    "back": "Retour",
+    "view": "Voir",
+    "details": "Détails",
+    "yes": "Oui",
+    "no": "Non",
+    "none": "Aucun",
+    "notProvided": "Non indiqué",
+    "optional": "facultatif",
+    "all": "Tous",
+    "filter": "Filtrer",
+    "reference": "Référence",
+    "status": "Statut",
+    "date": "Date",
+    "actions": "Actions",
+    "total": "Total",
+    "savedTitle": "Enregistré",
+    "saved": "Les modifications ont été enregistrées.",
+    "readOnly": "Accès en lecture seule : votre rôle ne permet pas de modifier ces informations.",
+    "demoData": "Données de démonstration",
+    "download": "Télécharger",
+    "open": "Ouvrir",
+    "confirm": "Confirmer",
+    "send": "Envoyer",
+    "search": "Rechercher"
+  },
+  "nav": {
+    "main": "Navigation principale",
+    "openMenu": "Ouvrir le menu",
+    "switchOrganization": "Changer d'organisation",
+    "signOut": "Se déconnecter",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications ({count} non lues)",
+    "account": "Mon compte",
+    "dashboard": "Tableau de bord",
+    "requests": "Demandes",
+    "bookings": "Rendez-vous",
+    "approvals": "Approbations",
+    "equipment": "Équipements",
+    "sites": "Sites",
+    "history": "Historique",
+    "documents": "Documents",
+    "payments": "Paiements",
+    "plans": "Plans de maintenance",
+    "team": "Équipe",
+    "invitations": "Demandes reçues",
+    "workOrders": "Interventions",
+    "calendar": "Calendrier",
+    "technicians": "Techniciens et disponibilités",
+    "reviews": "Avis clients",
+    "profile": "Profil public",
+    "subscription": "Abonnement",
+    "myJobs": "Mes interventions",
+    "providers": "Prestataires",
+    "routing": "Routage",
+    "disputes": "Litiges",
+    "reviewModeration": "Modération des avis",
+    "subscriptions": "Abonnements",
+    "reference": "Référentiels",
+    "audit": "Journal d'audit",
+    "support": "Messages support"
+  },
+  "public": {
+    "nav": {
+      "label": "Navigation du site",
+      "howItWorks": "Comment ça marche",
+      "directory": "Prestataires",
+      "pricing": "Tarifs pilote",
+      "contact": "Contact",
+      "privacy": "Confidentialité",
+      "signIn": "Se connecter",
+      "signUp": "Créer un compte",
+      "myWorkspace": "Mon espace"
+    },
+    "footer": {
+      "about": "Coordination de la maintenance du froid commercial : demande, offres, rendez-vous, approbation, rapport et historique.",
+      "disclaimer": "Nom de travail provisoire. La plateforme coordonne des prestataires qualifiés ; elle ne réalise pas les interventions et ne délivre pas de certificat de sécurité alimentaire."
+    },
+    "home": {
+      "metaDescription": "Place de marché B2B pour la maintenance des équipements frigorifiques commerciaux au Maroc : trouvez un prestataire, comparez, réservez, approuvez et conservez l'historique.",
+      "pilotBadge": "Pilote · Rabat-Salé · froid commercial",
+      "title": "La maintenance de vos équipements frigorifiques, de la demande au rapport",
+      "subtitle": "Restaurants, boulangeries, boucheries et commerces alimentaires : trouvez un prestataire, comparez des offres claires, approuvez les réparations avant les travaux et gardez l'historique de chaque équipement.",
+      "ctaCustomer": "Créer un compte client",
+      "ctaProvider": "Je suis prestataire",
+      "ctaNote": "Gratuit pour les entreprises clientes. Les prestataires paient un abonnement logiciel pendant le pilote.",
+      "illustrationLabel": "Illustration du parcours d'une demande (exemple fictif)",
+      "illustrationTitle": "Exemple de parcours",
+      "illustrationTag": "Illustration",
+      "illustration": {
+        "one": {
+          "title": "Vitrine réfrigérée — ne refroidit plus",
+          "body": "Demande décrite avec symptômes, photos et créneaux souhaités."
+        },
+        "two": {
+          "title": "2 offres de diagnostic à comparer",
+          "body": "Déplacement, diagnostic et taxes affichés séparément."
+        },
+        "three": {
+          "title": "Rendez-vous confirmé avec un technicien nommé",
+          "body": "Le créneau n'est garanti qu'après confirmation du prestataire."
+        },
+        "four": {
+          "title": "Rapport et historique de l'équipement",
+          "body": "Devis approuvé, travaux réalisés et prochaine échéance proposée."
+        }
+      },
+      "stepsTitle": "Un parcours complet, pas seulement un annuaire",
+      "stepLabel": "Étape {n}",
+      "steps": {
+        "request": {
+          "title": "Décrire le besoin",
+          "body": "Choisissez le site et l'équipement, décrivez les symptômes, ajoutez des photos et vos créneaux."
+        },
+        "compare": {
+          "title": "Comparer",
+          "body": "Jusqu'à trois prestataires invités répondent avec des offres structurées et comparables."
+        },
+        "book": {
+          "title": "Réserver",
+          "body": "Le prestataire confirme un technicien nommé et un créneau sans conflit."
+        },
+        "approve": {
+          "title": "Approuver",
+          "body": "Le devis de réparation est approuvé version par version avant tout travail."
+        },
+        "report": {
+          "title": "Garder la trace",
+          "body": "Rapport, documents, paiements déclarés et prochaines échéances restent attachés à l'équipement."
+        }
+      },
+      "customers": {
+        "title": "Pour les entreprises clientes",
+        "a": "Un historique par équipement : interventions, devis approuvés, rapports et documents.",
+        "b": "Des offres qui séparent déplacement, diagnostic, taxes et exclusions.",
+        "c": "Aucun travail supplémentaire sans votre approbation explicite.",
+        "d": "Invitez vos collègues avec des droits adaptés (responsable, lecture seule)."
+      },
+      "providers": {
+        "title": "Pour les prestataires de maintenance",
+        "a": "Demandes reçues, offres, calendrier des techniciens et interventions au même endroit.",
+        "b": "Devis de réparation versionnés et approbations horodatées.",
+        "c": "Rapports PDF générés automatiquement et rappels de maintenance.",
+        "d": "Utilisable aussi avec vos clients existants que vous invitez."
+      },
+      "limitsTitle": "Ce que la plateforme ne promet pas",
+      "limits": {
+        "a": "Aucun délai d'intervention d'urgence n'est garanti : une panne est routée pendant les heures de service publiées.",
+        "b": "Un badge de vérification décrit exactement le contrôle effectué ; il ne prouve pas à lui seul la compétence technique.",
+        "c": "Les paiements se font directement entre le client et le prestataire ; la plateforme ne détient pas de fonds.",
+        "d": "Le rapport consigne l'intervention ; ce n'est pas un certificat de sécurité alimentaire."
+      }
+    },
+    "how": {
+      "title": "Comment ça marche",
+      "intro": "Le service coordonne tout le parcours d'une intervention de maintenance frigorifique entre une entreprise cliente et un prestataire qualifié.",
+      "journeyTitle": "Le parcours en huit étapes",
+      "customer": "Client :",
+      "providerSystem": "Prestataire / plateforme :",
+      "journey": {
+        "search": {
+          "title": "Recherche",
+          "customer": "Indique la ville, la catégorie d'équipement et le type d'intervention.",
+          "provider": "Filtre les prestataires approuvés par catégorie, zone et heures de service déclarées."
+        },
+        "describe": {
+          "title": "Description",
+          "customer": "Choisit un équipement, décrit les symptômes et ajoute des photos.",
+          "provider": "Crée une demande structurée et partage un brief limité avec au plus trois prestataires invités."
+        },
+        "compare": {
+          "title": "Comparaison",
+          "customer": "Compare frais de déplacement, diagnostic, créneau et exclusions.",
+          "provider": "Renvoie des offres structurées ; les informations manquantes sont signalées."
+        },
+        "book": {
+          "title": "Réservation",
+          "customer": "Choisit une version d'offre précise.",
+          "provider": "Confirme un technicien nommé et réserve le créneau de façon atomique."
+        },
+        "diagnose": {
+          "title": "Diagnostic",
+          "customer": "Donne accès au site et consulte le constat.",
+          "provider": "Le technicien enregistre le constat et émet un devis de réparation versionné."
+        },
+        "approve": {
+          "title": "Approbation",
+          "customer": "Approuve ou refuse la version exacte (pièces, main-d'œuvre, taxes).",
+          "provider": "Travaille uniquement dans le périmètre approuvé ; tout ajout exige un nouveau devis."
+        },
+        "track": {
+          "title": "Suivi",
+          "customer": "Suit les étapes : en route, sur site, en attente de pièces, travaux.",
+          "provider": "Chaque changement est horodaté avec son auteur."
+        },
+        "close": {
+          "title": "Clôture",
+          "customer": "Prend connaissance du rapport ou le conteste, déclare son paiement.",
+          "provider": "Joint le rapport, confirme la réception du paiement et propose une prochaine date."
+        }
+      },
+      "pathsTitle": "Deux parcours",
+      "paths": {
+        "scheduled": {
+          "title": "Maintenance planifiée et diagnostic",
+          "body": "Vous invitez jusqu'à trois prestataires éligibles et comparez leurs offres avant de choisir."
+        },
+        "breakdown": {
+          "title": "Panne",
+          "body": "La demande entre dans une file de routage assistée pendant les heures de service publiées. Un prestataire disponible est sollicité avec un prix de visite confirmé d'abord. L'écran indique si la demande est non attribuée, en attente de réponse ou réellement confirmée."
+        }
+      },
+      "pricingNote": "Un tarif de diagnostic n'est pas un prix de réparation. Lorsque la réparation ne peut être chiffrée qu'après inspection, l'offre indique « Devis de réparation après diagnostic ». Une fenêtre horaire estimée n'est pas une heure d'arrivée garantie.",
+      "rulesTitle": "Règles de fonctionnement",
+      "rules": {
+        "verification": {
+          "title": "Vérifications",
+          "body": "Chaque badge indique précisément ce qui a été contrôlé (identité, références, assurance…). Un contrôle d'identité ne prouve pas la compétence technique."
+        },
+        "availability": {
+          "title": "Disponibilités",
+          "body": "Les disponibilités déclarées sont indicatives jusqu'à la confirmation d'un technicien et d'un créneau. Les temps de trajet et absences sont pris en compte."
+        },
+        "cancellation": {
+          "title": "Annulation et absence",
+          "body": "Les conditions sont affichées avant la réservation ; l'auteur et le motif d'une annulation sont enregistrés. La plateforme ne crée aucun frais automatiquement."
+        },
+        "priceChanges": {
+          "title": "Changement de prix",
+          "body": "Tout travail supplémentaire exige une nouvelle approbation. La version approuvée d'origine reste conservée."
+        },
+        "completion": {
+          "title": "Fin d'intervention",
+          "body": "Le technicien soumet un rapport ; le client le prend en compte ou le conteste. La prise en compte ne vaut pas renonciation à une réclamation."
+        },
+        "reviews": {
+          "title": "Avis",
+          "body": "Un avis par rendez-vous terminé, déposé par le client réel, modéré, avec droit de réponse. Aucune visibilité payante ne modifie les badges."
+        }
+      },
+      "browse": "Voir les prestataires"
+    },
+    "directory": {
+      "title": "Prestataires de maintenance frigorifique",
+      "intro": "Seuls les prestataires approuvés par la plateforme apparaissent. Les informations publiées sont déclarées par les prestataires, sauf les contrôles indiqués par un badge.",
+      "search": "Nom ou mot-clé",
+      "searchPlaceholder": "ex. chambre froide",
+      "city": "Ville",
+      "allCities": "Toutes les villes",
+      "category": "Équipement",
+      "allCategories": "Tous les équipements",
+      "openOn": "Ouvert le",
+      "anyDay": "N'importe quel jour",
+      "filter": "Filtrer",
+      "reset": "Réinitialiser",
+      "count": "{count} prestataire(s)",
+      "availabilityNote": "Heures de service déclarées, disponibilités confirmées uniquement lors de la réservation",
+      "emptyTitle": "Aucun prestataire trouvé",
+      "emptyFiltered": "Aucun prestataire approuvé ne correspond à ces critères. Élargissez la recherche ou contactez-nous : nous recrutons des prestataires dans la zone pilote.",
+      "emptyAll": "Aucun prestataire n'est encore approuvé dans la zone pilote."
+    },
+    "pricing": {
+      "title": "Tarifs du pilote",
+      "intro": "Pendant le pilote, les entreprises clientes utilisent le service gratuitement. Les prestataires paient un abonnement logiciel, sans commission sur les interventions.",
+      "customers": {
+        "badge": "Entreprises clientes",
+        "title": "Accès client",
+        "price": "Gratuit",
+        "a": "Sites, équipements, demandes et comparaison d'offres",
+        "b": "Approbation des devis et historique des interventions",
+        "c": "Collègues avec des rôles adaptés"
+      },
+      "providers": {
+        "badge": "Prix pilote à valider",
+        "title": "Abonnement prestataire",
+        "perMonth": "par mois",
+        "unavailable": "Tarif non configuré.",
+        "staff": "Une entreprise, jusqu'à {n} comptes (membres et invitations)",
+        "a": "Demandes reçues, offres et calendrier des techniciens",
+        "b": "Devis de réparation, rapports PDF et rappels de maintenance",
+        "c": "Utilisable avec vos clients existants",
+        "d": "Aucune commission sur les interventions pendant le pilote"
+      },
+      "honestTitle": "À savoir",
+      "honestBody": "Ce prix est une hypothèse de pilote, enregistrée manuellement par l'équipe (pas de paiement en ligne). Les paiements des interventions se font directement entre client et prestataire. Un abonnement expiré suspend l'émission de nouvelles offres mais conserve l'accès à l'historique et aux interventions en cours."
+    },
+    "contact": {
+      "title": "Contact et assistance",
+      "intro": "Une question sur le pilote, votre compte ou l'inscription de votre entreprise ? Écrivez-nous : l'équipe répond pendant les heures ouvrées.",
+      "noteEmergency": "Ce formulaire n'est pas un service d'urgence. Pour une panne, créez une demande de type « Panne » depuis votre espace client.",
+      "noteData": "N'envoyez pas de données sensibles (coordonnées bancaires, mots de passe).",
+      "name": "Nom",
+      "email": "Adresse e-mail",
+      "organization": "Entreprise",
+      "topic": "Sujet",
+      "message": "Message",
+      "send": "Envoyer le message",
+      "sentTitle": "Message envoyé",
+      "sentBody": "Votre message a été enregistré. L'équipe vous répondra par e-mail."
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "intro": "Résumé des traitements de données personnelles du service. Ce texte décrit le fonctionnement du logiciel ; il ne remplace pas les formalités à accomplir avant un lancement public.",
+      "data": {
+        "title": "Données traitées",
+        "body": "Comptes (nom, e-mail), rôles au sein des organisations, sites et équipements, demandes, offres, rendez-vous, rapports, photos et justificatifs déposés, paiements déclarés, journaux d'audit."
+      },
+      "sharing": {
+        "title": "Partage entre entreprises",
+        "body": "Un prestataire invité reçoit un brief limité (catégorie, ville, symptômes, créneaux). L'adresse et les consignes d'accès ne sont partagées qu'après sélection de son offre et confirmation du rendez-vous. Les prestataires ne voient jamais les offres de leurs concurrents."
+      },
+      "retention": {
+        "title": "Conservation",
+        "body": "Les dossiers d'intervention, approbations et paiements sont conservés pour garantir la traçabilité. Les photos non finalisées sont supprimées automatiquement. La suppression d'un compte se fait par anonymisation afin de préserver l'historique des autres parties."
+      },
+      "rights": {
+        "title": "Vos droits",
+        "body": "Vous pouvez demander l'accès, la rectification ou l'anonymisation de vos données via la page Contact."
+      },
+      "status": {
+        "title": "Statut réglementaire",
+        "body": "Avant tout traitement de données réelles, les déclarations ou autorisations applicables auprès de la CNDP et les règles de transfert à l'étranger doivent être vérifiées. Le pilote utilise des données de démonstration fictives."
+      }
+    }
+  },
+  "provider": {
+    "noReviews": "Aucun avis publié",
+    "rating": "{avg}/5 · {count} avis publié(s)",
+    "categories": "Catégories d'équipement",
+    "moreCategories": "+{n}",
+    "checks": "Contrôles effectués",
+    "noChecks": "Aucun contrôle enregistré par la plateforme.",
+    "viewProfile": "Voir le profil",
+    "serviceHours": "Heures de service",
+    "serviceHoursNote": "Heures déclarées par le prestataire ; un créneau n'est garanti qu'après confirmation.",
+    "closed": "Fermé",
+    "requestService": "Demander une intervention",
+    "about": "Présentation",
+    "checksTitle": "Contrôles de la plateforme",
+    "checksIntro": "Chaque badge décrit exactement ce qui a été vérifié et quand.",
+    "demoCheck": "contrôle de démonstration",
+    "checkedOn": "Contrôlé le {date}",
+    "checkExpires": "valable jusqu'au {date}",
+    "reviewsTitle": "Avis clients",
+    "reviewsIntro": "Un avis par intervention terminée, déposé par le client concerné et modéré. La note est calculée uniquement à partir des avis publiés.",
+    "reviewRating": "{rating}/5",
+    "providerReply": "Réponse du prestataire",
+    "areas": "Zones d'intervention",
+    "contactNote": "Les coordonnées du prestataire ne sont pas publiées : les échanges passent par une demande sur la plateforme."
+  },
+  "auth": {
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "name": "Nom et prénom",
+    "confirmPassword": "Confirmer le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "passwordHint": "10 caractères minimum.",
+    "signIn": "Se connecter",
+    "signInTitle": "Connexion",
+    "signInIntro": "Accédez à votre espace client, prestataire ou technicien.",
+    "forgot": "Mot de passe oublié ?",
+    "noAccount": "Créer un compte",
+    "haveAccount": "J'ai déjà un compte",
+    "signUpTitle": "Créer un compte",
+    "signUpIntro": "Créez votre compte personnel ; vous créerez ou rejoindrez ensuite votre entreprise.",
+    "signUpIntroProvider": "Créez votre compte personnel, puis l'espace de votre entreprise de maintenance. L'apparition dans l'annuaire nécessite une vérification.",
+    "createAccount": "Créer mon compte",
+    "acceptPrefix": "J'ai lu la page",
+    "checkInbox": "Vérifiez votre boîte de réception",
+    "checkInboxBody": "Un lien de confirmation a été envoyé à {email}. Ouvrez-le pour activer votre compte (valable 24 heures).",
+    "resendVerification": "Renvoyer l'e-mail de confirmation",
+    "verificationResent": "Si ce compte existe et n'est pas encore confirmé, un nouveau lien a été envoyé.",
+    "verifiedNotice": "Adresse e-mail confirmée. Vous pouvez vous connecter.",
+    "forgotTitle": "Mot de passe oublié",
+    "forgotIntro": "Indiquez votre adresse : si un compte existe, vous recevrez un lien de réinitialisation.",
+    "sendResetLink": "Envoyer le lien",
+    "resetSentTitle": "Demande enregistrée",
+    "resetSentBody": "Si un compte correspond à cette adresse, un lien valable une heure vient d'être envoyé.",
+    "backToSignIn": "Retour à la connexion",
+    "resetTitle": "Nouveau mot de passe",
+    "resetIntro": "Choisissez un nouveau mot de passe. Vos autres sessions seront déconnectées.",
+    "saveNewPassword": "Enregistrer le mot de passe",
+    "resetDoneTitle": "Mot de passe modifié",
+    "resetDoneBody": "Vous pouvez vous connecter avec votre nouveau mot de passe.",
+    "errors": {
+      "email": "Adresse e-mail invalide.",
+      "passwordRequired": "Saisissez votre mot de passe.",
+      "passwordShort": "10 caractères minimum.",
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "name": "Indiquez votre nom (2 caractères minimum).",
+      "accept": "Veuillez confirmer avoir lu la page Confidentialité.",
+      "invalidCredentials": "Adresse e-mail ou mot de passe incorrect.",
+      "notVerified": "Votre adresse e-mail n'est pas encore confirmée.",
+      "cannotRegister": "Impossible de créer un compte avec cette adresse. Si vous avez déjà un compte, connectez-vous ou réinitialisez votre mot de passe.",
+      "invalidToken": "Ce lien est invalide ou a expiré. Refaites une demande.",
+      "rateLimited": "Trop de tentatives. Patientez une minute puis réessayez."
+    }
   }
 }
