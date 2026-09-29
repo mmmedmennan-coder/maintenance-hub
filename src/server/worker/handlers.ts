@@ -4,6 +4,7 @@ import { formatMoney } from "@/lib/money";
 import { formatDateTime, durationLabel } from "@/lib/time";
 import { te } from "@/lib/i18n";
 import { getEnv } from "@/server/env";
+import { photoForPdf } from "@/server/pdf/images";
 import { renderQuotePdf, renderReportPdf } from "@/server/pdf/render";
 import { getStorage } from "@/server/storage";
 import {
@@ -60,13 +61,13 @@ export async function generateReportPdf(db: PrismaClient, reportId: string) {
   const wo = report.workOrder;
   const photos = await db.document.findMany({ where: { reportId, kind: "PHOTO", status: "READY" }, orderBy: { createdAt: "asc" }, take: 8 });
   const storage = getStorage();
-  const photoData = await Promise.all(
-    photos.map(async (p) => ({
-      name: p.originalName,
-      // Only JPEG is embedded: pdfkit decodes PNG asynchronously and a malformed file could not be caught.
-      data: p.mimeType === "image/jpeg" ? await storage.get(p.storageKey).catch(() => null) : null,
-    })),
-  );
+  // Every photo (JPEG, PNG, WebP) is decoded and re-encoded as a clean JPEG before embedding:
+  // pdfkit then never parses an uploaded file directly, and EXIF/GPS metadata is dropped.
+  const photoData = [];
+  for (const p of photos) {
+    const original = await storage.get(p.storageKey).catch(() => null);
+    photoData.push({ name: p.originalName, data: original ? await photoForPdf(original) : null });
+  }
   const env = getEnv();
   const approvedScopes = wo.repairQuotes.flatMap((q) =>
     q.versions

@@ -1,5 +1,5 @@
 import { type Browser, type Page, expect, test } from "@playwright/test";
-import { JPEG_8x8 } from "../fixtures";
+import { JPEG_8x8, PNG_8x8 } from "../fixtures";
 import { BASE_URL, confirmDialog, demo, expectNoHorizontalOverflow, signIn } from "./helpers";
 
 test.setTimeout(240_000);
@@ -50,6 +50,8 @@ test("repair approval by exact version, technician work and report on a phone, a
   await reportUpload.setInputFiles({ name: "evaporateur.jpg", mimeType: "image/jpeg", buffer: JPEG_8x8 });
   await expect(tech.getByText("Enregistré", { exact: true }).first()).toBeVisible();
   await expect(tech.getByRole("checkbox", { name: /evaporateur\.jpg/ })).toBeChecked();
+  await reportUpload.setInputFiles({ name: "compresseur.png", mimeType: "image/png", buffer: PNG_8x8 });
+  await expect(tech.getByRole("checkbox", { name: /compresseur\.png/ })).toBeChecked();
 
   await tech.getByLabel(/^Constat/).fill("Fuite localisée sur un raccord de la ligne liquide, contacteur usé.");
   await tech.getByLabel(/^Travaux réalisés/).fill("Raccord refait, contacteur remplacé, tirage au vide et recharge. −20 °C atteints.");
@@ -71,7 +73,10 @@ test("repair approval by exact version, technician work and report on a phone, a
   const pdf = await owner.request.get((await reportLink.getAttribute("href"))!);
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toContain("application/pdf");
-  expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  const pdfBody = await pdf.body();
+  expect(pdfBody.subarray(0, 5).toString()).toBe("%PDF-");
+  // Both photos (JPEG and PNG) are embedded as images, not just listed by name.
+  expect(pdfBody.toString("latin1").match(/\/Subtype \/Image/g)).toHaveLength(2);
 
   // Someone from another organisation cannot download it.
   const outsider = await as(browser, demo("restaurant"));

@@ -312,7 +312,10 @@ Two-step upload: `POST /api/v1/documents` records ownership, target and visibili
 10 MB cap, sniffs the real type (JPEG/PNG/WebP/PDF only), stores it under an opaque key outside
 `public/` and marks it `READY` (or `FAILED`, shown as "Non enregistré" with a retry). Downloads are
 authorized under RLS first, then streamed (local) or redirected to a 60-second signed URL (S3).
-PDFs are rendered from persisted data only (no HTML, no external URLs).
+PDFs are rendered from persisted data only (no HTML, no external URLs). Report photos (up to 8,
+JPEG/PNG/WebP) are decoded by the worker with `sharp` (pixel limit, strict decoding, EXIF
+orientation), resized to at most 1200 px, flattened and re-encoded as metadata-free JPEG before
+being embedded; a file that cannot be decoded is listed by name instead.
 
 ## 9. Personal data
 
