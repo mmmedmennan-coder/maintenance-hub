@@ -52,7 +52,7 @@ Role abbreviations below: **C-W** customer owner/manager, **C-R** any customer m
 | `GET /service-areas` | Public | — | Active service areas (cities, routing hours) |
 | `GET /providers` | Public | `categoryId`, `serviceAreaId`, `city`, `weekday` (1–7, published service hours), `date` (YYYY-MM-DD, today to +90 days: at least one active technician declared available that day, with the category skill if `categoryId` is set; provisional), `q`, `page` | Approved profiles only, 9 per page; ratings from published reviews |
 | `GET /providers/{slug}` | Public | `reviewPage` | Approved profile, verified checks (with dates and demo flag), published reviews |
-| `POST /support` | Public | `supportMessageSchema` (name, email, organizationName?, topic, message) | Rate-limited per IP |
+| `POST /support` | Public | `supportMessageSchema` (name, email, organizationName?, topic, message) | 5 messages per client address per hour (PostgreSQL counter shared by all web instances), then `RATE_LIMITED` |
 | `GET /me` | session | — | User, memberships, active organization |
 | `POST /me/active-organization` | session | `{ organizationId }` | Must be one of the user's memberships |
 | `POST /onboarding` | session (no membership) | `{ type: CUSTOMER|PROVIDER, name, city }` | Creates the organization, owner membership (and a DRAFT provider profile). Never grants platform administrator. |

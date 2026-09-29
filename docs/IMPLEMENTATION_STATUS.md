@@ -1,7 +1,9 @@
 # Implementation status
 
 This file records what exists, how it was verified and what is still missing. It was written at
-the end of the initial build (28 September 2026) and describes the commit that adds it.
+the end of the initial build (28 September 2026) and updated on 29 September 2026 after closing
+four limitations (declared-availability search, shared support-form rate limit, PNG/WebP photos in
+report PDFs, review and subscription tests). It describes the commit that last changed it.
 
 **Overall status:** the pilot scope of the master prompt is implemented as one Next.js
 application (web + API), a separate worker and a PostgreSQL 16 database with row-level security.
@@ -29,12 +31,12 @@ locally, Mailpit 1.x binary for e-mail capture) on the final code.
 | Lint | `npm run lint` | 0 errors, 0 warnings |
 | Types | `npm run typecheck` (TypeScript strict) | 0 errors |
 | Production build | `npm run build` | success, no build warnings |
-| Unit tests | `npm run test` | 7 files, **38/38 passed** (money, Casablanca time incl. Ramadan UTC+0, security helpers, startup configuration, schemas, PDF rendering, i18n key coverage) |
-| Integration tests | `npm run test:integration` | 6 files, **15/15 passed**, against real PostgreSQL with the production-style roles `mh_app` / `mh_auth` / `mh_worker` (not a superuser) |
+| Unit tests | `npm run test` | 7 files, **40/40 passed** (money, Casablanca time incl. Ramadan UTC+0, security helpers, startup configuration, schemas incl. availability dates, PDF rendering and photo conversion, i18n key coverage) |
+| Integration tests | `npm run test:integration` | 9 files, **24/24 passed**, against real PostgreSQL with the production-style roles `mh_app` / `mh_auth` / `mh_worker` (not a superuser) |
 | End-to-end tests | `npm run test:e2e` (Playwright, Chromium, production build on port 3100, fresh seeded test DB, Mailpit) | **11/11 passed** |
 | Responsive crawl | custom Playwright crawl of 88 page visits per width (all roles, list + detail pages) at **360, 768 and 1440 px** | 0 problems (HTTP status, horizontal overflow, console errors, untranslated keys, error screens) |
 | Accessibility scan | axe-core 4 (WCAG 2.0/2.1 A + AA + best-practice rules) on 76 pages (public, customer, provider, technician, admin, detail pages) at 360 and 1440 px | 0 violations after fixing 2 findings (auth footer outside a landmark; low-contrast hash text) |
-| Fresh install | on an empty scratch database: `db:bootstrap` → `db:migrate` → `db:seed`, then `db:seed` again | success; the second seed created no duplicates |
+| Fresh install | on an empty scratch database: `db:bootstrap` → `db:migrate` (4 migrations) → `db:seed`, then `db:seed` twice more | success; record counts identical after each re-run (no duplicates) |
 | Dependency audit | `npm audit` | 0 vulnerabilities (with two `overrides`, see `docs/DEPLOYMENT.md` §8) |
 | Docker Compose | `docker compose config` | file valid. **Containers not started**: Docker Hub pulls are blocked in the build environment, so PostgreSQL and Mailpit were run natively instead |
 | Screenshots | Playwright | `docs/screenshots/` (customer dashboard and offer comparison, provider calendar, admin, technician at 360 px) |
@@ -59,9 +61,13 @@ locally, Mailpit 1.x binary for e-mail capture) on the final code.
 | `tests/integration/maintenance-worker.test.ts` (3 tests) | plan needs customer consent; exactly one draft per due date on repeated runs; overdue pending bookings expire and the offer can be chosen again; a crashed worker's lease is reclaimed and effects stay idempotent |
 | `tests/integration/memberships.test.ts` (2 tests) | onboarding cannot create a platform organization or grant `platform_admin`; staff limit counts members + pending invitations; invitations bound to the invited e-mail |
 | `tests/integration/admin-routing.test.ts` | an administrator routes a breakdown to one eligible provider without being able to edit the request |
-| `tests/e2e/01-public-and-access.spec.ts` (3) | public pages at 360 px with honest wording; sign-in required and each role stays in its workspace; guessed booking id through the API → not found |
+| `tests/integration/directory.test.ts` (2 tests) | declared-availability date filter: active technician with a weekly window that day, category skill respected, partial vs whole-window time off, deactivated technicians ignored; unapproved providers never listed; the public context still cannot read technicians, windows, time off or reservations |
+| `tests/integration/public-rate-limit.test.ts` (4 tests) | support-form limiter in PostgreSQL: fixed window and reset, exact counting under 12 concurrent requests, HMAC key (no raw IP), runtime role cannot read/edit counters, worker cleanup of old windows |
+| `tests/integration/reviews-subscriptions.test.ts` (3 tests) | reviews: only the booking's customer writer, only once, only after completion; ratings from published reviews only; one provider reply, not by a competitor or technician; admin-only moderation and reply hiding, all audited. Subscription expiry: `ENTITLEMENT_REQUIRED` for new offers and plans, while confirmation, visit, report and payments of the already-selected job continue; an admin-recorded period restores access |
+| `tests/unit/pdf.test.ts` | PDF rendering; JPEG/PNG/WebP photos re-encoded as bounded JPEG without EXIF, undecodable or truncated files refused, converted photos embedded |
+| `tests/e2e/01-public-and-access.spec.ts` (3) | public pages at 360 px with honest wording; directory date filter (a workday matches, a Sunday shows the honest empty state); sign-in required and each role stays in its workspace; guessed booking id through the API → not found |
 | `tests/e2e/02-marketplace.spec.ts` | new account: sign-up, e-mail verification link from Mailpit, onboarding, site, equipment, 4-step request, invitation, provider offer with live total, **comparison and selection on a 390 px phone**, dispatcher confirmation with technician |
-| `tests/e2e/03-field-work.spec.ts` (3) | read-only member cannot approve; **manager approves the exact quote version on a phone**; technician on a phone starts work, a fake image is refused and stays "Non enregistré" with retry, report submitted; customer acknowledges; PDF downloads; outsider denied; payments: reported vs confirmed amounts; change-order quote with live totals |
+| `tests/e2e/03-field-work.spec.ts` (3) | read-only member cannot approve; **manager approves the exact quote version on a phone**; technician on a phone starts work, a fake image is refused and stays "Non enregistré" with retry, a JPEG and a PNG photo are attached, report submitted; customer acknowledges; PDF downloads with both photos embedded; outsider denied; payments: reported vs confirmed amounts; change-order quote with live totals |
 | `tests/e2e/04-admin.spec.ts` (2) | provider approval requires a verified identity check; manual routing of a breakdown; dispute mediation and resolution |
 | `tests/e2e/05-accounts.spec.ts` (2) | staff invitation → registration → verification → joins as technician, seat limit shown; password reset by e-mail and sign-in with the new password |
 
@@ -110,7 +116,7 @@ Main code locations: pages in `src/app/**`, API in `src/app/api/v1/**`, domain s
 | --- | --- | --- |
 | **A.** Request wizard with site/equipment, diagnostic or maintenance, symptoms, photos, windows; asset ownership validated | Tested | `request-wizard.tsx`, `requests.ts` (`createRequestDraft`, `submitRequest`); DB composite FKs; E2E 02, integration |
 | **A.** Provider search by category, city/service area, published service hours; paginated, filters in the URL, honest empty states | Tested | `searchProviders`, `/prestataires`; integration (approved only), E2E 01 |
-| **A.** Search by *declared availability* | **Partial** | The directory filters by published service hours for a weekday. Technician availability windows are not used in public search. They are enforced when the provider confirms the booking. |
+| **A.** Search by *declared availability* | Tested | Date filter (today to +90 days) on `/prestataires` and `GET /api/v1/providers?date=`: trusted function `app.provider_declares_availability` returns only a boolean (active technician, weekly window, category skill, time off). Labelled provisional; capacity is reserved only at confirmation. `directory.test.ts`, E2E 01 |
 | **A.** Invite up to 3 eligible providers (customer or routing admin); limited brief before selection; breakdown routed to one company; unassigned / awaiting / confirmed shown | Tested | `inviteProviders` (max 3, eligibility), RLS brief projection, `admin-routing.test.ts`, E2E 04 |
 | **B.** Structured offer (scope, call-out, diagnostic/fixed fee, tax, window, duration, exclusions, cancellation, expiry, warranty) | Tested | `offer-editor.tsx`, `saveOfferDraft`/`issueOffer`; E2E 02 |
 | **B.** MAD display; diagnostic separate from repair; "Devis de réparation après diagnostic" | Tested | `offer-comparison.tsx`; E2E 02 amount assertions |
@@ -127,15 +133,15 @@ Main code locations: pages in `src/app/**`, API in `src/app/api/v1/**`, domain s
 | **E.** Acknowledgment or dispute kept separate from work status; admin resolution appended, not rewritten; pending acknowledgment shown honestly | Tested | `respondToReport`, `adminDisputeAction`, `DisputeEvent`; `work-execution.test.ts`, E2E 04 |
 | **F.** Direct payments: cash/transfer/other, date, optional private evidence; `REPORTED` vs `CONFIRMED`; customer cannot confirm; admin corrections with reason + audit | Tested | `recordPayment`, `updatePayment`; `work-execution.test.ts`, E2E 03 |
 | **F.** Partial payments, confirmed balance, explicit reversals, no deletion; completed ≠ paid | Tested | `paymentSummary`; `work-execution.test.ts` |
-| **F.** Editable pilot plan 399 MAD/month excl. tax, 3 staff; manual admin periods, audited; expiry blocks new offers/plans only | Tested (staff limit) / Inspected (periods, expiry) | `SubscriptionPlan`, `recordSubscriptionPeriod`, `assertEntitled`; `memberships.test.ts`; rules in `docs/ARCHITECTURE.md` |
+| **F.** Editable pilot plan 399 MAD/month excl. tax, 3 staff; manual admin periods, audited; expiry blocks new offers/plans only | Tested | `SubscriptionPlan`, `recordSubscriptionPeriod`, `assertEntitled`; `memberships.test.ts` (staff limit), `reviews-subscriptions.test.ts` (expiry and renewal); rules in `docs/ARCHITECTURE.md` |
 | **F.** Maintenance plans: provider-entered recurrence, customer consent, reminders/draft requests only, unique occurrence key | Tested | `proposePlan`, `decidePlan`, `generateMaintenanceOccurrences`; `maintenance-worker.test.ts` |
-| **F.** One review per eligible booking, moderation, provider reply, ratings from published reviews | Inspected | `createReview`, `moderateReview`, `respondToReview`; unique index on `review.booking_id` |
+| **F.** One review per eligible booking, moderation, provider reply, ratings from published reviews | Tested | `createReview`, `moderateReview`, `respondToReview`, `hideReviewResponse`; unique index on `review.booking_id`; `reviews-subscriptions.test.ts` |
 
 ### §7 Data model and integrity
 
 | Requirement | Status | Where / evidence |
 | --- | --- | --- |
-| All listed entities | Done | `prisma/schema.prisma`: 55 models, including Better Auth's `User`/`Session`/`Account`/`Verification`/`Organization`/`Member`/`Invitation` (no parallel identity tables) |
+| All listed entities | Done | `prisma/schema.prisma`: 56 models, including Better Auth's `User`/`Session`/`Account`/`Verification`/`Organization`/`Member`/`Invitation` (no parallel identity tables) |
 | FKs, delete policies, indexes, uniqueness, optimistic `version` fields | Tested | schema + migrations; `VERSION_CONFLICT` tests |
 | Composite relationships against mismatched ownership (asset ↔ customer, technician ↔ provider) | Tested | composite FKs in `…_init` and `…_security`; integration isolation tests |
 | Archival instead of deletion for assets with history; issued documents preserved | Inspected | `setSiteArchived`, `setEquipmentArchived`; document deletion limited to non-issued uploads |
@@ -146,7 +152,7 @@ Main code locations: pages in `src/app/**`, API in `src/app/api/v1/**`, domain s
 
 | Requirement | Status | Where / evidence |
 | --- | --- | --- |
-| Customer / invited provider / losing bidder / chosen provider / technician visibility rules | Tested | 167 RLS policies on 51 tables (`…_security/migration.sql`); `marketplace-flow.test.ts`, `work-execution.test.ts`, E2E 01/03 |
+| Customer / invited provider / losing bidder / chosen provider / technician visibility rules | Tested | 168 RLS policies on 52 tables (`prisma/migrations/*`); `marketplace-flow.test.ts`, `work-execution.test.ts`, E2E 01/03 |
 | Shared vs internal vs private notes and documents | Tested | `WorkOrderNote.visibility`, `Document.visibility`; integration tests |
 | Admin support with explicit privileges and audited access | Inspected | `platform_admin` policies, `auditAdminView` (`admin.viewed` events), `/admin/audit` |
 | Centralized server authorization + RLS; non-owner runtime role without `BYPASSRLS`; separate migration role | Tested | services check actor/role, then RLS; roles `mh_owner`/`mh_app`/`mh_auth`/`mh_worker`; integration suite runs as `mh_app` |
@@ -182,8 +188,8 @@ Main code locations: pages in `src/app/**`, API in `src/app/api/v1/**`, domain s
 | --- | --- | --- |
 | Private storage outside `public/`, opaque keys, recorded scope, authorization before signed link | Tested | `src/server/storage/index.ts`, `documents.ts`; E2E 03 (outsider denied) |
 | Content sniffing (not filename/MIME), type/size/count caps, no path traversal, failed uploads visible, abandoned objects cleaned | Tested | `file-type` signature check, `assertSafeKey`, `cleanupAbandonedUploads`; E2E 03 (fake JPEG refused), `security-helpers.test.ts` |
-| Better Auth sessions/passwords, trusted origins, safe redirects, origin checks on mutations, secure cookies, rate limits (sign-in, reset, invitations, uploads) | Tested (auth flows) / Inspected (limits) | `src/server/auth/auth.ts`, `src/server/http.ts`; E2E 05 |
-| Customer content rendered as text; no HTML/URLs in PDFs | Done | React escaping; PDFs built from plain fields |
+| Better Auth sessions/passwords, trusted origins, safe redirects, origin checks on mutations, secure cookies, rate limits (sign-in, reset, invitations, uploads, support form) | Tested (auth flows, support-form limiter) / Inspected (other limits) | `src/server/auth/auth.ts`, `src/server/http.ts`, `src/server/lib/rate-limit.ts`; E2E 05, `public-rate-limit.test.ts` |
+| Customer content rendered as text; no HTML/URLs in PDFs | Tested | React escaping; PDFs built from plain fields; photos decoded and re-encoded by `src/server/pdf/images.ts` before embedding (`pdf.test.ts`, E2E 03) |
 | Startup validation of settings; production refuses insecure fallbacks | Tested | `src/server/env.ts`; `tests/unit/env.test.ts` |
 | Log redaction; retention and anonymization documented | Done | worker error redaction; `docs/DEPLOYMENT.md` §9; `npm run user:anonymize` (dry run by default) |
 | Transactional outbox + durable worker with retries, backoff, attempt limits, visible failures; at-least-once | Tested | `OutboxEvent`, `EmailDelivery`, `src/server/worker/*`; `maintenance-worker.test.ts`; admin dashboard queue status |
@@ -245,27 +251,23 @@ These deferred features appear nowhere in the interface as working options.
 ## 5. Known limitations
 
 1. **Not deployed; production adapters untested.** The S3 adapter (`STORAGE_DRIVER=s3`) and SMTP with a real provider were never exercised. Test both before a pilot (`docs/DEPLOYMENT.md` §5–6).
-2. **Support-form rate limit is in memory,** one limiter per web instance. Other limits are database-backed. Replace it with a shared store before running several web instances.
-3. **Directory "declared availability"** uses published service hours only (see §6 A above).
-4. **French only.** Strings are centralized in `src/messages/fr.json`, but Arabic/RTL is not implemented.
-5. **No appointment-day reminder e-mails.** Reminders exist for maintenance plans, and notifications are sent on every booking and work event.
-6. **Report PDFs embed JPEG photos only** (up to 8). PNG/WebP photos stay downloadable from the job but are not embedded, because the PDF library decodes PNG asynchronously and a malformed file could not be contained safely.
-7. **No automated retention purge.** Retention is documented, and the purge queries must be scheduled by the operator (`docs/DEPLOYMENT.md` §9).
-8. **Demo data ages.** Scenarios are dated relative to the seed run. The pending booking expires after 24 hours (confirmation deadline) and "today" jobs become past jobs. Re-create the demo with `npm run db:reset-dev -- --yes`, `npm run db:migrate` and `npm run db:seed`. Completed demo jobs were replayed through the real services with a shifted clock (`scripts/lib/demo-clock.ts`), so their timestamps are consistent but synthetic.
-9. **Log noise.** When a browser aborts a navigation mid-stream, Next.js logs `The destination stream closed early`. It is harmless and does not affect the response.
-10. **Tested only with Node.js 22 and Chromium.** Firefox/Safari and Node 24 were not tested.
-11. **Accessibility scans cover the loaded state of each page.** Open dialogs, error states and screen-reader flows were checked only by hand (keyboard) or not at all.
-12. **Legal.** Personal-data handling (loi 09-08, CNDP declaration), commercial terms, cancellation terms and invoicing/tax compliance need legal review. The software issues quotes and reports, not legal invoices.
+2. **Per-address limits trust `X-Forwarded-For`.** The production proxy must overwrite it with the real client address (`docs/DEPLOYMENT.md` §8).
+3. **French only.** Strings are centralized in `src/messages/fr.json`, but Arabic/RTL is not implemented.
+4. **No appointment-day reminder e-mails.** Reminders exist for maintenance plans, and notifications are sent on every booking and work event.
+5. **Report PDFs embed at most 8 photos.** Further photos stay attached to the job and downloadable.
+6. **No automated retention purge.** Retention is documented, and the purge queries must be scheduled by the operator (`docs/DEPLOYMENT.md` §9).
+7. **Demo data ages.** Scenarios are dated relative to the seed run. The pending booking expires after 24 hours (confirmation deadline) and "today" jobs become past jobs. Re-create the demo with `npm run db:reset-dev -- --yes`, `npm run db:migrate` and `npm run db:seed`. Completed demo jobs were replayed through the real services with a shifted clock (`scripts/lib/demo-clock.ts`), so their timestamps are consistent but synthetic.
+8. **Log noise.** When a browser aborts a navigation mid-stream, Next.js logs `The destination stream closed early`. It is harmless and does not affect the response.
+9. **Tested only with Node.js 22 and Chromium.** Firefox/Safari and Node 24 were not tested.
+10. **Accessibility scans cover the loaded state of each page.** Open dialogs, error states and screen-reader flows were checked only by hand (keyboard) or not at all.
+11. **Legal.** Personal-data handling (loi 09-08, CNDP declaration), commercial terms, cancellation terms and invoicing/tax compliance need legal review. The software issues quotes and reports, not legal invoices.
 
 ## 6. Next steps
 
 1. Run the Windows/PowerShell setup from `README.md` on the target machine with Docker Desktop, and fix any path or quoting issue found.
 2. Provision a staging environment (`docs/DEPLOYMENT.md`) and test S3 uploads/downloads, real SMTP (SPF/DKIM) and a backup/restore rehearsal.
-3. Replace the in-memory support limiter with a database-backed one.
-4. Get legal review of the data-processing notice, retention periods and pilot terms. Then prepare a small pilot with real providers who have agreed to take part.
-5. Consider next:
-   - technician availability windows in public search;
-   - appointment reminders;
-   - PNG/WebP embedding in PDFs (convert to JPEG in the worker);
+3. Get legal review of the data-processing notice, retention periods and pilot terms. Then prepare a small pilot with real providers who have agreed to take part.
+4. Consider next:
+   - appointment-day reminders;
    - an Arabic interface;
    - a scheduled retention purge.
