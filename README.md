@@ -46,23 +46,21 @@ Windows et WSL dans une même installation : utilisez soit PowerShell, soit WSL,
 
 Les commandes sont données pour **PowerShell** puis pour **WSL/bash**.
 
-### 2.1 Dépendances et services locaux
+### 2.1 Dépendances et fichier de configuration
 
 ```powershell
 # PowerShell
 npm ci
 Copy-Item .env.example .env
-docker compose up -d        # PostgreSQL 16 sur 127.0.0.1:5432, Mailpit sur 127.0.0.1:1025 / :8025
 ```
 
 ```bash
 # WSL / bash
 npm ci
 cp .env.example .env
-docker compose up -d
 ```
 
-### 2.2 Configurer `.env`
+### 2.2 Configurer `.env` (avant de démarrer Docker)
 
 Remplacez **toutes** les valeurs `change-me…` / `replace-with…` :
 
@@ -73,10 +71,25 @@ Remplacez **toutes** les valeurs `change-me…` / `replace-with…` :
   minimum) dans les quatre URL de base de données. Les noms de rôles sont fixes.
 - `POSTGRES_SUPERUSER_PASSWORD` et `POSTGRES_SUPERUSER_URL` doivent correspondre (compte
   superutilisateur du conteneur, utilisé uniquement par `db:bootstrap`).
+- Utilisez uniquement des lettres et des chiffres dans ces mots de passe : ils figurent dans des
+  URL, où `@ : / # ?` casseraient la connexion.
 
 Ne commitez jamais `.env` (il est ignoré par Git).
 
-### 2.3 Base de données
+### 2.3 Démarrer PostgreSQL et Mailpit
+
+```powershell
+docker compose up -d        # PostgreSQL 16 sur 127.0.0.1:5432, Mailpit sur 127.0.0.1:1025 / :8025
+docker compose ps           # les deux services doivent être « running » (postgres « healthy »)
+```
+
+Le mot de passe superutilisateur n'est appliqué qu'au **premier** démarrage (création du volume).
+Si vous le modifiez ensuite dans `.env`, recréez le volume local : `docker compose down -v` puis
+`docker compose up -d` (cela efface la base locale). Si le port 5432 est déjà pris par un
+PostgreSQL installé sur la machine, ajoutez `POSTGRES_PORT=5433` dans `.env` et utilisez `5433`
+dans les cinq URL de base de données.
+
+### 2.4 Base de données
 
 ```powershell
 npm run db:generate    # génère le client Prisma (src/generated/prisma)
@@ -90,9 +103,9 @@ Les mêmes commandes fonctionnent à l'identique sous WSL/bash.
 - `db:bootstrap` refuse de s'exécuter en production ; en production, les rôles sont créés selon
   `docs/DEPLOYMENT.md`.
 - Sans données de démonstration, lancez `npm run db:reference` (catégories d'équipement, zone
-  Rabat‑Salé, offre pilote) puis créez l'administrateur (section 4).
+  Rabat‑Salé, offre pilote) puis créez l'administrateur (section 2.5).
 
-### 2.4 Premier administrateur (sans données de démo)
+### 2.5 Premier administrateur (sans données de démo)
 
 Il n'existe aucune inscription publique donnant le rôle d'administrateur plateforme. Créez-le en
 local :
