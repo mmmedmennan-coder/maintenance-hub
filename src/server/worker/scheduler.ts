@@ -140,12 +140,19 @@ export async function cleanupAbandonedUploads(db: PrismaClient, now = new Date()
   return stale.length;
 }
 
+/** Deletes public rate-limit windows older than a day (all limits use windows of at most 24 h). */
+export async function cleanupRateLimitWindows(db: PrismaClient, now = new Date()) {
+  const { count } = await db.publicRateLimit.deleteMany({ where: { windowStart: { lt: new Date(now.getTime() - 24 * 3600_000) } } });
+  return count;
+}
+
 export async function runScheduledTasks(db: PrismaClient, now = new Date()) {
   const results = {
     expiredBookings: await expireOverdueBookings(db, now),
     expiredOffers: await markExpiredOffers(db, now),
     maintenanceOccurrences: await generateMaintenanceOccurrences(db, now),
     abandonedUploads: await cleanupAbandonedUploads(db, now),
+    rateLimitWindows: await cleanupRateLimitWindows(db, now),
   };
   return results;
 }

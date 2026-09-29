@@ -16,7 +16,7 @@ Internet ─TLS─► reverse proxy / platform load balancer ─► web: `npm ru
 
 | Component | Requirement |
 | --- | --- |
-| Web | Node.js 22 LTS, `npm ci && npm run db:generate && npm run build`, then `npm run start` (set `PORT` if needed). Stateless: several instances are possible, see §8 for the in-memory support-form limiter. |
+| Web | Node.js 22 LTS, `npm ci && npm run db:generate && npm run build`, then `npm run start` (set `PORT` if needed). Stateless: several instances are possible (sessions and rate limits live in PostgreSQL). |
 | Worker | Same build and environment, `npm run worker:start`. At least one instance must run permanently; several are safe (`FOR UPDATE SKIP LOCKED`, leases). |
 | PostgreSQL | 16.x with the `btree_gist` extension available, TLS, automated backups/PITR. |
 | Storage | Private S3-compatible bucket (AWS S3, Scaleway, OVH, MinIO…). |
@@ -126,9 +126,11 @@ Restore procedure (test it before the pilot, then quarterly):
   `Cache-Control: no-store, private` on API responses. Keep proxy caching disabled for `/api` and
   signed-in pages.
 - Rate limits: sign-in/sign-up/reset/verification use Better Auth's database-backed limiter;
-  invitations and uploads are limited from database counts; the public support form uses an
-  **in-memory** limiter per web instance — replace it with a shared store before running several
-  web instances.
+  invitations and uploads are limited from database counts; the public support form uses a
+  PostgreSQL fixed-window counter (`public_rate_limit`, 5 messages per address per hour, keyed by
+  an HMAC of the address, never the raw IP). All of them hold across several web instances.
+  The proxy **must overwrite** `X-Forwarded-For` with the real client address; otherwise clients
+  could vary the header to evade the per-address limits.
 - Logs: the app never logs secrets; e-mail addresses are redacted from worker errors. Ship logs
   to a private destination with limited retention (e.g. 30 days).
 - Monitor: worker process liveness, `DEAD` outbox/e-mail rows (admin dashboard), database storage

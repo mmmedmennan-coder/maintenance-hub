@@ -1401,6 +1401,18 @@ model ProviderReferral {
   @@map("provider_referral")
 }
 
+/// Fixed-window counters for public, unauthenticated endpoints (support form). Keys contain an HMAC
+/// of the client address, never the raw IP. Written only through app.hit_public_rate_limit();
+/// stale rows are deleted by the worker.
+model PublicRateLimit {
+  key         String   @id
+  windowStart DateTime @map("window_start") @db.Timestamptz(3)
+  count       Int
+
+  @@index([windowStart])
+  @@map("public_rate_limit")
+}
+
 model SupportMessage {
   id               String   @id @default(uuid())
   name             String

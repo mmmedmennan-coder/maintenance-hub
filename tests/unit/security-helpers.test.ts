@@ -5,7 +5,6 @@ import { afterAll, describe, expect, it } from "vitest";
 import { safeNext } from "@/server/auth/session";
 import { DomainError, mapDatabaseError, sqlState } from "@/server/errors";
 import { canonicalJson, snapshotHash } from "@/server/lib/hash";
-import { hitRateLimit } from "@/server/lib/rate-limit";
 import { assertSafeKey } from "@/server/storage";
 
 describe("snapshot hashes", () => {
@@ -56,14 +55,6 @@ describe("private storage keys", () => {
   it("reject traversal and unexpected characters", () => {
     expect(() => assertSafeKey("docs/202609/abc-123")).not.toThrow();
     for (const bad of ["../etc/passwd", "docs/../../x", "docs/ABC", "/docs/x", "docs", "docs/x y"]) expect(() => assertSafeKey(bad)).toThrow();
-  });
-});
-
-describe("public endpoint rate limiter", () => {
-  it("allows up to the limit in a window", () => {
-    const key = `test-${Math.random()}`;
-    const results = Array.from({ length: 4 }, () => hitRateLimit(key, 3, 60_000));
-    expect(results).toEqual([false, false, false, true]);
   });
 });
 
