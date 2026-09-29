@@ -74,6 +74,24 @@ export const quantityInput = z.union([z.string(), z.number()]).transform((v, ctx
   return parsed;
 });
 
+/** Declared-availability search: a local date from today up to 90 days ahead (Casablanca). */
+export const AVAILABILITY_SEARCH_DAYS = 90;
+export function availabilityDateRange(now = new Date()) {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Casablanca" }).format(now);
+  const last = new Date(`${today}T00:00:00Z`);
+  last.setUTCDate(last.getUTCDate() + AVAILABILITY_SEARCH_DAYS);
+  return { min: today, max: last.toISOString().slice(0, 10) };
+}
+export function isAvailabilitySearchDate(d: string, now = new Date()) {
+  const { min, max } = availabilityDateRange(now);
+  const parsed = Date.parse(`${d}T00:00:00Z`);
+  // Round trip rejects impossible dates such as 2026-11-31 (JavaScript would roll them over).
+  return !Number.isNaN(parsed) && new Date(parsed).toISOString().slice(0, 10) === d && d >= min && d <= max;
+}
+export const availabilitySearchDate = localDate.refine((d) => isAvailabilitySearchDate(d), {
+  message: `Choisissez une date entre aujourd'hui et ${AVAILABILITY_SEARCH_DAYS} jours.`,
+});
+
 export const paginationQuery = z.object({
   page: z.coerce.number().int().min(1).max(1000).default(1),
 });

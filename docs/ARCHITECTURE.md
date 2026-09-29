@@ -101,7 +101,12 @@ Helper functions in schema `app` (`SECURITY DEFINER`, fixed `search_path`, no re
 policies they serve): `uid()`, `org()`, `role()`, `org_type()`, `is_admin()`, `is_customer_writer()`,
 `is_provider_manager()`, `is_technician()`, `technician_id()`, `provider_sees_booking()`,
 `provider_can_see_request/site/equipment()`, `is_request_invitee()`, `can_see_work_order()`,
-`queue_health()`.
+`queue_health()`, `provider_is_public()`, and `provider_declares_availability(org, date, category)`,
+which answers the public directory's "declared available on this date" filter with a boolean only
+(an active technician with a weekly window that day, the requested skill if any, and no time off
+covering the whole window). Technician names, hours, time off and reservations stay private;
+existing bookings are not considered, because declared availability is provisional until a
+provider confirms a slot.
 
 | Data | Customer | Invited provider (before selection) | Selected provider | Technician | Admin |
 | --- | --- | --- | --- | --- | --- |

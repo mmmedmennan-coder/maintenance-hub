@@ -768,7 +768,11 @@
       "availabilityNote": "Heures de service déclarées, disponibilités confirmées uniquement lors de la réservation",
       "emptyTitle": "Aucun prestataire trouvé",
       "emptyFiltered": "Aucun prestataire approuvé ne correspond à ces critères. Élargissez la recherche ou contactez-nous : nous recrutons des prestataires dans la zone pilote.",
-      "emptyAll": "Aucun prestataire n'est encore approuvé dans la zone pilote."
+      "emptyAll": "Aucun prestataire n'est encore approuvé dans la zone pilote.",
+      "availableOn": "Disponibilité déclarée le",
+      "availableOnHint": "Au moins un technicien déclaré disponible ce jour-là (à confirmer lors de la réservation).",
+      "availableOnInvalid": "Date de disponibilité ignorée : choisissez une date entre aujourd'hui et {days} jours.",
+      "availableOnActive": "Disponibilité déclarée par le prestataire pour le {date} : elle n'est garantie qu'après confirmation d'un rendez-vous."
     },
     "pricing": {
       "title": "Tarifs du pilote",

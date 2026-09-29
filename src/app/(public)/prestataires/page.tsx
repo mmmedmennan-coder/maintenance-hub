@@ -1,22 +1,27 @@
 import { SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import { t, te } from "@/lib/i18n";
+import { AVAILABILITY_SEARCH_DAYS, availabilityDateRange, availabilitySearchDate } from "@/lib/schemas";
+import { formatCalendarDate } from "@/lib/time";
 import { withPublic } from "@/server/db/context";
 import { searchProviders } from "@/server/modules/providers";
 import { listEquipmentCategories, listServiceAreas } from "@/server/modules/reference";
 import { ProviderCard } from "@/components/domain/provider-card";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/feedback";
+import { Alert, EmptyState } from "@/components/ui/feedback";
 import { Pagination } from "@/components/ui/layout";
 
 export const metadata: Metadata = { title: t("public.directory.title") };
 
-type Search = { q?: string; city?: string; category?: string; day?: string; page?: string };
+type Search = { q?: string; city?: string; category?: string; day?: string; date?: string; page?: string };
 
 export default async function DirectoryPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const weekday = sp.day && /^[1-7]$/.test(sp.day) ? Number(sp.day) : undefined;
+  const dateCheck = sp.date ? availabilitySearchDate.safeParse(sp.date) : null;
+  const date = dateCheck?.success ? dateCheck.data : undefined;
+  const dateRange = availabilityDateRange();
   const [categories, areas, results] = await withPublic(async (tx) =>
     Promise.all([
       listEquipmentCategories(tx),
@@ -26,6 +31,7 @@ export default async function DirectoryPage({ searchParams }: { searchParams: Pr
         city: sp.city?.slice(0, 80),
         categoryId: sp.category && /^[0-9a-f-]{36}$/.test(sp.category) ? sp.category : undefined,
         weekday,
+        date,
         page,
       }),
     ]),
@@ -38,7 +44,7 @@ export default async function DirectoryPage({ searchParams }: { searchParams: Pr
       <h1 className="text-3xl font-bold tracking-tight text-ink">{t("public.directory.title")}</h1>
       <p className="mt-2 max-w-3xl text-ink-soft">{t("public.directory.intro")}</p>
 
-      <form method="get" className="mt-6 grid gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_auto]" role="search">
+      <form method="get" className="mt-6 grid grid-cols-1 gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3" role="search">
         <div className="flex flex-col gap-1">
           <label htmlFor="q" className="text-sm font-semibold">
             {t("public.directory.search")}
@@ -84,7 +90,25 @@ export default async function DirectoryPage({ searchParams }: { searchParams: Pr
             ))}
           </select>
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="date" className="text-sm font-semibold">
+            {t("public.directory.availableOn")}
+          </label>
+          <input
+            id="date"
+            name="date"
+            type="date"
+            min={dateRange.min}
+            max={dateRange.max}
+            defaultValue={date ?? ""}
+            aria-describedby="date-hint"
+            className="h-11 rounded-lg border border-line-strong bg-surface px-3"
+          />
+          <p id="date-hint" className="text-xs text-muted">
+            {t("public.directory.availableOnHint")}
+          </p>
+        </div>
+        <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-3 lg:justify-end">
           <Button type="submit" className="w-full sm:w-auto">
             {t("public.directory.filter")}
           </Button>
@@ -95,6 +119,13 @@ export default async function DirectoryPage({ searchParams }: { searchParams: Pr
           ) : null}
         </div>
       </form>
+
+      {dateCheck && !dateCheck.success ? (
+        <div className="mt-4">
+          <Alert tone="warn">{t("public.directory.availableOnInvalid", { days: AVAILABILITY_SEARCH_DAYS })}</Alert>
+        </div>
+      ) : null}
+      {date ? <p className="mt-4 text-sm text-ink-soft">{t("public.directory.availableOnActive", { date: formatCalendarDate(date) })}</p> : null}
 
       <p className="mt-4 text-sm text-muted" aria-live="polite">
         {t("public.directory.count", { count: results.total })} · {t("public.directory.availabilityNote")}

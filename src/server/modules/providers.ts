@@ -14,6 +14,8 @@ export type ProviderSearch = {
   serviceAreaId?: string;
   city?: string;
   weekday?: number;
+  /** Local date (YYYY-MM-DD): provider declares an active technician available that day. */
+  date?: string;
   q?: string;
   page?: number;
 };
@@ -36,6 +38,9 @@ type SearchRow = {
  * Public directory search. Runs under row-level security in the caller's context, so only
  * APPROVED profiles are returned and counts cannot reveal unapproved providers.
  * Only public projections are selected (no contact details, no internal notes).
+ * The `date` filter asks the trusted function `app.provider_declares_availability`, which returns
+ * only a boolean (technician windows and time off stay private). It is declared, provisional
+ * availability: capacity is only reserved when the provider confirms a booking.
  */
 export async function searchProviders(tx: Tx, search: ProviderSearch) {
   const page = Math.max(1, search.page ?? 1);
@@ -58,6 +63,8 @@ export async function searchProviders(tx: Tx, search: ProviderSearch) {
             WHERE psa.provider_profile_id = p.id AND sa.active
               AND EXISTS (SELECT 1 FROM unnest(sa.cities) c WHERE lower(c) = lower(${city}::text))))
       AND (${search.weekday ?? null}::int IS NULL OR jsonb_exists(p.service_hours, ${search.weekday ? String(search.weekday) : null}::text))
+      AND (${search.date ?? null}::date IS NULL
+           OR app.provider_declares_availability(p.provider_org_id, ${search.date ?? null}::date, ${search.categoryId ?? null}::text))
       AND (${q}::text IS NULL OR p.display_name ILIKE ${q}::text OR p.summary ILIKE ${q}::text)
     ORDER BY p.display_name ASC
     LIMIT ${DIRECTORY_PAGE_SIZE} OFFSET ${offset}`;

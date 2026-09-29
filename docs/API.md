@@ -50,7 +50,7 @@ Role abbreviations below: **C-W** customer owner/manager, **C-R** any customer m
 | --- | --- | --- | --- |
 | `GET /categories` | Public | — | Active equipment categories |
 | `GET /service-areas` | Public | — | Active service areas (cities, routing hours) |
-| `GET /providers` | Public | `categoryId`, `serviceAreaId`, `city`, `weekday` (1–7), `q`, `page` | Approved profiles only, 9 per page; ratings from published reviews |
+| `GET /providers` | Public | `categoryId`, `serviceAreaId`, `city`, `weekday` (1–7, published service hours), `date` (YYYY-MM-DD, today to +90 days: at least one active technician declared available that day, with the category skill if `categoryId` is set; provisional), `q`, `page` | Approved profiles only, 9 per page; ratings from published reviews |
 | `GET /providers/{slug}` | Public | `reviewPage` | Approved profile, verified checks (with dates and demo flag), published reviews |
 | `POST /support` | Public | `supportMessageSchema` (name, email, organizationName?, topic, message) | Rate-limited per IP |
 | `GET /me` | session | — | User, memberships, active organization |

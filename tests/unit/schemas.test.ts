@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { offerDraftSchema, paymentSchema, quoteDecisionSchema, repairQuoteSchema, reportSchema, serviceHoursSchema, siteSchema, staffInviteSchema } from "@/lib/schemas";
+import { availabilityDateRange, availabilitySearchDate, isAvailabilitySearchDate, offerDraftSchema, paymentSchema, quoteDecisionSchema, repairQuoteSchema, reportSchema, serviceHoursSchema, siteSchema, staffInviteSchema } from "@/lib/schemas";
 
 describe("input contracts shared by forms and the API", () => {
   it("service hours accept closed days (partial week)", () => {
@@ -33,5 +33,22 @@ describe("input contracts shared by forms and the API", () => {
     expect(staffInviteSchema.parse({ email: " Tech@Example.TEST ", role: "technician" }).email).toBe("tech@example.test");
     expect(staffInviteSchema.safeParse({ email: "a@b.test", role: "platform_admin" }).success).toBe(false);
     expect(siteSchema.parse({ name: "Site A", addressLine: "1 rue X", city: "Rabat", accessNotes: "", contactName: "", contactPhone: "" }).accessNotes).toBeNull();
+  });
+  it("availability search dates run from today (Casablanca) to +90 days", () => {
+    const { min, max } = availabilityDateRange();
+    const shift = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+    expect(availabilitySearchDate.safeParse(min).success).toBe(true);
+    expect(availabilitySearchDate.safeParse(max).success).toBe(true);
+    expect(availabilitySearchDate.safeParse(shift(min, -1)).success).toBe(false);
+    expect(availabilitySearchDate.safeParse(shift(max, 1)).success).toBe(false);
+    const oct1 = new Date("2026-10-01T10:00:00Z");
+    expect(isAvailabilitySearchDate("2026-11-30", oct1)).toBe(true);
+    expect(isAvailabilitySearchDate("2026-11-31", oct1)).toBe(false); // impossible date, not rolled over
+    expect(isAvailabilitySearchDate("2026-09-30", oct1)).toBe(false); // past
+    expect(isAvailabilitySearchDate("2026-12-30", oct1)).toBe(true); // +90 days
+    expect(isAvailabilitySearchDate("2026-12-31", oct1)).toBe(false);
+    expect(availabilitySearchDate.safeParse("demain").success).toBe(false);
+    // Just after midnight in Casablanca (UTC+1 outside Ramadan) is already the next local day.
+    expect(availabilityDateRange(new Date("2026-10-14T23:30:00Z")).min).toBe("2026-10-15");
   });
 });

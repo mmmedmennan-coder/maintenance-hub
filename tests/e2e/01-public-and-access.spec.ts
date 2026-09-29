@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { demo, expectNoHorizontalOverflow, signIn } from "./helpers";
+import { demo, expectNoHorizontalOverflow, signIn, workday } from "./helpers";
 
 test("public pages present the pilot honestly and work on a phone", async ({ page }) => {
   await page.goto("/");
@@ -8,6 +8,17 @@ test("public pages present the pilot honestly and work on a phone", async ({ pag
   await expect(page.getByText("Froid Atlas Services (démo)").first()).toBeVisible();
   // Providers awaiting verification are never listed.
   await expect(page.getByText("Clim & Froid Témara (démo)")).toHaveCount(0);
+
+  // Declared availability: demo technicians work Monday–Saturday.
+  await page.getByLabel("Disponibilité déclarée le").fill(workday(3));
+  await page.getByRole("button", { name: "Filtrer" }).click();
+  await expect(page).toHaveURL(/date=\d{4}-\d{2}-\d{2}/);
+  await expect(page.getByText(/n'est garantie qu'après confirmation d'un rendez-vous/)).toBeVisible();
+  await expect(page.getByText("Froid Atlas Services (démo)").first()).toBeVisible();
+  await page.getByLabel("Disponibilité déclarée le").fill(nextSunday());
+  await page.getByRole("button", { name: "Filtrer" }).click();
+  await expect(page.getByText("Aucun prestataire trouvé")).toBeVisible();
+  await page.goto("/prestataires");
   await page.getByText("Froid Atlas Services (démo)").first().click();
   await expect(page.getByText(/aucun contrôle réel/i).first()).toBeVisible();
   await page.goto("/tarifs");
@@ -46,3 +57,10 @@ test("a customer cannot read another organisation's booking through the API", as
     expect(res.status()).toBe(404);
   }
 });
+
+function nextSunday() {
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Casablanca" });
+  let d = new Date(Date.now() + 86_400_000);
+  while (new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Casablanca", weekday: "short" }).format(d) !== "Sun") d = new Date(d.getTime() + 86_400_000);
+  return fmt.format(d);
+}
